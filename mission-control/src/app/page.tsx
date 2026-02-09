@@ -44,10 +44,9 @@ export default function Home() {
   const [selectedTaskId, setSelectedTaskId] = useState<Id<"tasks"> | null>(null);
   const [selectedAgentId, setSelectedAgentId] = useState<Id<"agents"> | null>(null);
   const [showCreateTask, setShowCreateTask] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const [showBroadcast, setShowBroadcast] = useState(false);
   const [showDocs, setShowDocs] = useState(false);
-  const [rightPanel, setRightPanel] = useState<"feed" | "profile">("feed");
+  const [rightPanel, setRightPanel] = useState<"feed" | "chat" | "profile">("feed");
 
   const agentStats = useQuery(api.agents.stats);
   const taskStats = useQuery(api.tasks.stats);
@@ -70,7 +69,7 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-xs font-bold text-foreground tracking-widest">
-                MISSION CONTROL
+                COMMAND OS
               </h1>
               <p className="text-[9px] text-muted font-mono tracking-wider">
                 Stark Industries
@@ -106,12 +105,6 @@ export default function Home() {
               className="text-[10px] bg-surface border border-card-border text-foreground font-semibold px-3 py-1.5 rounded-lg hover:border-accent/50 transition-colors flex items-center gap-1.5"
             >
               📌 Active
-            </button>
-            <button
-              onClick={() => setShowChat(true)}
-              className="text-[10px] bg-surface border border-card-border text-foreground font-semibold px-3 py-1.5 rounded-lg hover:border-accent/50 transition-colors flex items-center gap-1.5"
-            >
-              💬 Chat
             </button>
             <button
               onClick={() => setShowBroadcast(true)}
@@ -151,7 +144,7 @@ export default function Home() {
           onSelectAgent={handleSelectAgent}
         />
 
-        {/* Center: Mission Queue (Task Board) */}
+        {/* Center: Task Board */}
         <div className="flex-1 min-w-0 overflow-y-auto p-4">
           {/* + New Task Button */}
           <div className="flex items-center justify-between mb-3">
@@ -166,15 +159,56 @@ export default function Home() {
           <TaskBoard onSelectTask={setSelectedTaskId} />
         </div>
 
-        {/* Right: Live Feed or Agent Profile */}
-        <div className="w-[360px] flex-shrink-0 border-l border-card-border overflow-y-auto">
-          {rightPanel === "profile" && selectedAgentId ? (
-            <AgentProfile agentId={selectedAgentId} />
-          ) : (
-            <div className="p-4">
-              <LiveFeed />
-            </div>
-          )}
+        {/* Right: Tabbed Panel — Feed / Chat / Profile */}
+        <div className="w-[360px] flex-shrink-0 border-l border-card-border flex flex-col">
+          {/* Tab Bar */}
+          <div className="flex border-b border-card-border flex-shrink-0">
+            <button
+              onClick={() => { setRightPanel("feed"); setSelectedAgentId(null); }}
+              className={`flex-1 px-3 py-2.5 text-[10px] font-semibold tracking-wide transition-colors ${
+                rightPanel === "feed"
+                  ? "text-accent border-b-2 border-accent bg-accent/5"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              ⚡ Live Feed
+            </button>
+            <button
+              onClick={() => { setRightPanel("chat"); setSelectedAgentId(null); }}
+              className={`flex-1 px-3 py-2.5 text-[10px] font-semibold tracking-wide transition-colors ${
+                rightPanel === "chat"
+                  ? "text-accent border-b-2 border-accent bg-accent/5"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              💬 Squad Chat
+            </button>
+            {selectedAgentId && (
+              <button
+                onClick={() => setRightPanel("profile")}
+                className={`flex-1 px-3 py-2.5 text-[10px] font-semibold tracking-wide transition-colors ${
+                  rightPanel === "profile"
+                    ? "text-accent border-b-2 border-accent bg-accent/5"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                🧑 Profile
+              </button>
+            )}
+          </div>
+
+          {/* Tab Content */}
+          <div className="flex-1 overflow-y-auto">
+            {rightPanel === "profile" && selectedAgentId ? (
+              <AgentProfile agentId={selectedAgentId} />
+            ) : rightPanel === "chat" ? (
+              <SquadChat />
+            ) : (
+              <div className="p-4">
+                <LiveFeed />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -188,7 +222,6 @@ export default function Home() {
       {showCreateTask && (
         <CreateTask onClose={() => setShowCreateTask(false)} />
       )}
-      {showChat && <SquadChat onClose={() => setShowChat(false)} />}
       {showBroadcast && (
         <BroadcastModal onClose={() => setShowBroadcast(false)} />
       )}

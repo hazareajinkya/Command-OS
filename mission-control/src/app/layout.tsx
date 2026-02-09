@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mission Control",
-  description: "AI Agent Squad — Mission Control Dashboard",
+  title: "Command OS",
+  description: "AI Agent Squad — Command OS Dashboard",
 };
 
 export default function RootLayout({

@@ -22,9 +22,35 @@ We are the **Stark Squad** — 10 AI agents working together under **Mission Con
 
 ## How Mission Control Works
 
-Mission Control is our shared workspace — a Convex database + dashboard where all tasks, comments, and activity live.
+Mission Control is our shared workspace — a Convex database + dashboard where all tasks, comments, and activity live. **The human operator monitors EVERYTHING through this dashboard. If you do something and it's not logged to Mission Control, the operator can't see it — which means it effectively didn't happen.**
+
+### FIRST THING: Get Your Agent ID
+
+Before you can interact with Mission Control, you need your Convex agent ID. Look it up using your session key:
+
+```bash
+cd /home/ubuntu/clawd && npx convex run agents:getBySessionKey '{"sessionKey": "YOUR_SESSION_KEY"}'
+```
+
+The `_id` field in the response is YOUR_AGENT_ID. Use it for ALL commands below.
+
+Session keys for reference:
+| Agent | Session Key |
+|---|---|
+| JARVIS | `agent:main:main` |
+| FRIDAY | `agent:developer:main` |
+| EDITH | `agent:product-analyst:main` |
+| HULKBUSTER | `agent:customer-researcher:main` |
+| VISION | `agent:content-writer:main` |
+| BANNER | `agent:seo-analyst:main` |
+| RHODEY | `agent:social-media-manager:main` |
+| PEPPER | `agent:email-marketing:main` |
+| MARK1 | `agent:designer:main` |
+| KAREN | `agent:notion-agent:main` |
 
 ### Interacting with Mission Control
+
+**All commands run from:** `cd /home/ubuntu/clawd`
 
 **Check your tasks:**
 ```bash
@@ -41,6 +67,12 @@ npx convex run messages:create '{"taskId": "TASK_ID", "fromAgentId": "YOUR_AGENT
 npx convex run tasks:updateStatus '{"id": "TASK_ID", "status": "in_progress"}'
 ```
 
+**Update your own status** (do this whenever you start/stop working):
+```bash
+npx convex run agents:updateStatus '{"id": "YOUR_AGENT_ID", "status": "working"}'
+npx convex run agents:updateStatus '{"id": "YOUR_AGENT_ID", "status": "active"}'
+```
+
 **Check your notifications:**
 ```bash
 npx convex run notifications:getUndeliveredForAgent '{"agentId": "YOUR_AGENT_ID"}'
@@ -55,6 +87,19 @@ npx convex run documents:create '{"title": "Doc Title", "content": "Markdown con
 ```bash
 npx convex run activities:create '{"type": "heartbeat", "agentId": "YOUR_AGENT_ID", "message": "HEARTBEAT_OK - no pending tasks"}'
 ```
+
+**Send a squad chat message:**
+```bash
+npx convex run chat:send '{"fromAgentId": "YOUR_AGENT_ID", "content": "Your message"}'
+```
+
+**Create a new task:**
+```bash
+npx convex run tasks:create '{"title": "Task Title", "description": "Description", "status": "inbox", "assigneeIds": [], "priority": "medium"}'
+```
+
+### THE GOLDEN RULE
+> **Every conversation, every action, every decision MUST be logged to Mission Control.** The dashboard is the operator's eyes. If it's not there, it didn't happen. This is NON-NEGOTIABLE.
 
 ## Memory System
 

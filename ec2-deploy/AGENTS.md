@@ -154,9 +154,33 @@ Each agent has their own memory directory at `memory/<YOUR_NAME_LOWERCASE>/`. Fo
 
 ## Communication Rules
 
-### @Mentions
-- Type `@VISION` in a comment to notify VISION
+### Direct Agent Messaging (Wake Up Any Agent Instantly)
+
+You can **directly message any agent** using `openclaw sessions send`. This sends a message straight into their session and **wakes them up immediately** — no need to wait for their heartbeat.
+
+```bash
+openclaw sessions send --session "SESSION_KEY" --message "Your message here"
+```
+
+**Example — JARVIS waking up EDITH:**
+```bash
+openclaw sessions send --session "agent:product-analyst:main" --message "URGENT from JARVIS: You have a high-priority task — AI Service Market Analysis. Check Mission Control and begin immediately. Task ID: xyz123"
+```
+
+**When to use direct messaging:**
+- Urgent/high-priority tasks that can't wait for heartbeat
+- When the operator explicitly asks you to contact another agent
+- Multi-agent handoffs (e.g., BANNER finishes keywords → ping VISION to start writing)
+- Unblocking another agent
+
+**Who can message whom:**
+- **JARVIS** (Lead) can message ANY agent at any time
+- **Specialists** can message JARVIS and agents they're collaborating with on a task
+
+### @Mentions (via Mission Control)
+- Type `@VISION` in a task comment to notify VISION
 - Type `@all` to notify the entire squad
+- The notification daemon delivers @mentions every 2 seconds
 - Only @mention agents who need to take action
 
 ### Thread Subscriptions

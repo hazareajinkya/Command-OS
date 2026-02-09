@@ -42,6 +42,7 @@ export default function TaskDetail({
   const [newComment, setNewComment] = useState("");
   const [selectedAgent, setSelectedAgent] = useState<Id<"agents"> | "">("");
   const [showContent, setShowContent] = useState(false);
+  const [expandedDocId, setExpandedDocId] = useState<string | null>(null);
 
   if (!task || !agents) {
     return (
@@ -188,9 +189,14 @@ export default function TaskDetail({
           <div className="flex gap-2">
             <button
               onClick={() => setShowContent(!showContent)}
-              className="text-[11px] text-info hover:text-info/80 transition-colors"
+              className="text-[11px] text-info hover:text-info/80 transition-colors flex items-center gap-1"
             >
-              {showContent ? "▼" : "▶"} View content
+              {showContent ? "▼" : "▶"} Deliverables
+              {documents && documents.length > 0 && (
+                <span className="bg-accent/20 text-accent text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-1">
+                  {documents.length}
+                </span>
+              )}
             </button>
             <button
               onClick={handleArchive}
@@ -200,25 +206,66 @@ export default function TaskDetail({
             </button>
           </div>
 
-          {/* Expandable Content / Docs */}
-          {showContent && documents && documents.length > 0 && (
-            <div className="bg-surface/50 rounded-lg p-3 border border-card-border max-h-40 overflow-y-auto">
-              {documents.map((doc) => (
-                <div key={doc._id} className="mb-2">
-                  <p className="text-[10px] text-accent font-semibold">
-                    📄 {doc.title}
-                  </p>
-                  <p className="text-[10px] text-foreground/70 whitespace-pre-wrap line-clamp-4">
-                    {doc.content}
-                  </p>
-                </div>
-              ))}
+          {/* Expandable Deliverables / Docs */}
+          {showContent && (
+            <div className="space-y-2">
+              {documents && documents.length > 0 ? (
+                documents.map((doc) => {
+                  const isExpanded = expandedDocId === doc._id;
+                  const typeIcons: Record<string, string> = {
+                    deliverable: "📦",
+                    research: "🔬",
+                    protocol: "📋",
+                    notes: "📝",
+                    draft: "✏️",
+                  };
+                  return (
+                    <div
+                      key={doc._id}
+                      className="bg-surface/50 rounded-lg border border-card-border overflow-hidden"
+                    >
+                      {/* Doc Header — always visible */}
+                      <button
+                        onClick={() =>
+                          setExpandedDocId(isExpanded ? null : doc._id)
+                        }
+                        className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-surface/80 transition-colors text-left"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm flex-shrink-0">
+                            {typeIcons[doc.type] ?? "📄"}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-foreground truncate">
+                              {doc.title}
+                            </p>
+                            <p className="text-[10px] text-muted">
+                              {doc.type.toUpperCase()} • {doc.content.length.toLocaleString()} chars
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-muted flex-shrink-0 ml-2">
+                          {isExpanded ? "▼ Collapse" : "▶ Read"}
+                        </span>
+                      </button>
+
+                      {/* Doc Content — expanded */}
+                      {isExpanded && (
+                        <div className="px-4 py-3 border-t border-card-border bg-background/50 max-h-[50vh] overflow-y-auto">
+                          <div className="text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap font-mono">
+                            {doc.content}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-[10px] text-muted italic py-2">
+                  No documents attached to this task yet.
+                </p>
+              )}
             </div>
-          )}
-          {showContent && (!documents || documents.length === 0) && (
-            <p className="text-[10px] text-muted italic">
-              No documents attached to this task yet.
-            </p>
           )}
         </div>
 

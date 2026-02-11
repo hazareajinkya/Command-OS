@@ -78,6 +78,18 @@ npx convex run agents:updateStatus '{"id": "YOUR_AGENT_ID", "status": "active"}'
 npx convex run notifications:getUndeliveredForAgent '{"agentId": "YOUR_AGENT_ID"}'
 ```
 
+**Check Commander Direct Messages (PRIORITY — check this first!):**
+```bash
+npx convex run directMessages:getUndeliveredForAgent '{"agentId": "YOUR_AGENT_ID"}'
+```
+
+**Reply to the Commander via Direct Message:**
+```bash
+npx convex run directMessages:sendFromAgent '{"agentId": "YOUR_AGENT_ID", "content": "Your reply here", "messageType": "text"}'
+```
+Use `"messageType": "task_suggestion"` when proposing a new task to the Commander.
+Use `"messageType": "status_update"` when reporting your current status.
+
 **Create a document/deliverable:**
 ```bash
 npx convex run documents:create '{"title": "Doc Title", "content": "Markdown content...", "type": "deliverable", "taskId": "TASK_ID", "createdBy": "YOUR_AGENT_ID"}'
@@ -97,6 +109,18 @@ npx convex run chat:send '{"fromAgentId": "YOUR_AGENT_ID", "content": "Your mess
 ```bash
 npx convex run tasks:create '{"title": "Task Title", "description": "Description", "status": "inbox", "assigneeIds": [], "priority": "medium"}'
 ```
+
+**Log API usage/cost (REQUIRED after every significant action):**
+```bash
+npx convex run costs:log '{"agentId": "YOUR_AGENT_ID", "taskId": "TASK_ID_OR_OMIT", "model": "openrouter/moonshotai/kimi-k2.5", "promptTokens": 1500, "completionTokens": 800, "totalTokens": 2300, "costUsd": 0.0023, "action": "task_work", "note": "Wrote blog draft"}'
+```
+
+**Cost logging guidelines:**
+- `action` should be one of: `heartbeat`, `task_work`, `delegation`, `research`, `content_creation`, `review`, `coordination`
+- Estimate tokens if exact count is not available: ~4 chars per token for English text
+- Use these approximate cost rates for `openrouter/moonshotai/kimi-k2.5`: $0.001 per 1K tokens
+- The operator tracks costs per task and per agent on the Mission Control dashboard
+- **Log costs after EVERY action** — heartbeats, task work, research, delegation, everything
 
 ### THE GOLDEN RULE
 > **Every conversation, every action, every decision MUST be logged to Mission Control.** The dashboard is the operator's eyes. If it's not there, it didn't happen. This is NON-NEGOTIABLE.
@@ -154,6 +178,31 @@ Each agent has their own memory directory at `memory/<YOUR_NAME_LOWERCASE>/`. Fo
 
 ## Communication Rules
 
+### Commander Direct Messages (HIGHEST PRIORITY)
+
+The Commander (human operator) can message you directly through the Mission Control dashboard. These messages appear in the `directMessages` table and get delivered to your session by the notification daemon.
+
+**On EVERY heartbeat, check for Commander DMs FIRST:**
+```bash
+cd /home/ubuntu/clawd && npx convex run directMessages:getUndeliveredForAgent '{"agentId": "YOUR_AGENT_ID"}'
+```
+
+**ALWAYS reply to Commander DMs.** The Commander expects a response. Reply via:
+```bash
+cd /home/ubuntu/clawd && npx convex run directMessages:sendFromAgent '{"agentId": "YOUR_AGENT_ID", "content": "Your reply", "messageType": "text"}'
+```
+
+**Message types you can send to the Commander:**
+- `"text"` — Regular reply or update
+- `"task_suggestion"` — Propose a task you want to work on (shown with a green badge in the dashboard)
+- `"status_update"` — Report your current status
+
+**Rules for Commander DMs:**
+- Commander DMs take priority over everything else
+- If the Commander asks you to do something, create a task in Mission Control AND do it
+- If you're unsure about something, ask the Commander via DM rather than guessing
+- Proactively suggest tasks you can work on using `task_suggestion` message type
+
 ### Direct Agent Messaging (Wake Up Any Agent Instantly)
 
 You can **directly message any agent** using `openclaw sessions send`. This sends a message straight into their session and **wakes them up immediately** — no need to wait for their heartbeat.
@@ -187,6 +236,47 @@ openclaw sessions send --session "agent:product-analyst:main" --message "URGENT 
 - When you comment on a task, you're subscribed to future comments
 - When you're assigned to a task, you're subscribed
 - When you're @mentioned on a task, you're subscribed
+
+### Squad Chat (General Discussion)
+
+Squad Chat is for conversations that are **NOT tied to a specific task**. Use it for:
+- Sharing insights or discoveries that could benefit the team
+- Quick coordination ("I'm starting on X, anyone have context?")
+- Flagging interesting trends or data points
+- Asking for input before creating a formal task
+- Casual team communication
+
+**Post to Squad Chat:**
+```bash
+cd /home/ubuntu/clawd && npx convex run chat:send '{"fromAgentId": "YOUR_AGENT_ID", "content": "Your message here"}'
+```
+
+**Read recent Squad Chat:**
+```bash
+cd /home/ubuntu/clawd && npx convex run chat:list '{"limit": 20}'
+```
+
+**Guidelines:**
+- Post at least 1 Squad Chat message per day if you're active
+- Share insights you discover while working (e.g., "Found that competitor X just raised $5M — could affect our strategy")
+- If a chat conversation turns into actionable work, create a task for it
+- Keep messages concise but informative
+
+### Broadcasts (Squad Announcements)
+
+Broadcasts are **announcements sent to ALL agents**. Only JARVIS or the human operator should send broadcasts.
+
+**Send a broadcast (JARVIS only):**
+```bash
+cd /home/ubuntu/clawd && npx convex run broadcasts:send '{"message": "Your announcement", "priority": "normal", "fromAgentId": "YOUR_AGENT_ID"}'
+```
+
+**Read recent broadcasts:**
+```bash
+cd /home/ubuntu/clawd && npx convex run broadcasts:list '{"limit": 5}'
+```
+
+Priority can be `"normal"` or `"urgent"`. Urgent broadcasts create notifications for all agents.
 
 ### When to Speak vs. Stay Quiet
 - **SPEAK** if you have relevant expertise to contribute

@@ -1,4 +1,4 @@
-# MISSION CONTROL — Full Project Context
+# COMMAND OS — Full Project Context
 
 > **Last Updated:** February 9, 2026  
 > **Owner:** Ajinkya  

@@ -20,9 +20,11 @@ const statusColor: Record<string, string> = {
 export default function AgentSidebar({
   selectedAgentId,
   onSelectAgent,
+  onCreateAgent,
 }: {
   selectedAgentId: Id<"agents"> | null;
   onSelectAgent: (id: Id<"agents"> | null) => void;
+  onCreateAgent?: () => void;
 }) {
   const agents = useQuery(api.agents.list);
 
@@ -37,7 +39,7 @@ export default function AgentSidebar({
   ).length;
 
   return (
-    <div className="w-[220px] flex-shrink-0 bg-card-bg border-r border-card-border min-h-screen overflow-y-auto">
+    <div className="w-[220px] flex-shrink-0 bg-card-bg border-r border-card-border flex flex-col">
       {/* Section Header */}
       <div className="px-4 py-3 border-b border-card-border flex items-center justify-between">
         <div className="flex items-center gap-1.5">
@@ -73,7 +75,7 @@ export default function AgentSidebar({
       </button>
 
       {/* Agent List */}
-      <div className="divide-y divide-card-border/50">
+      <div className="divide-y divide-card-border/50 flex-1 overflow-y-auto">
         {agents.map((agent) => {
           const badge = levelBadge[agent.level];
           const isSelected = selectedAgentId === agent._id;
@@ -113,6 +115,23 @@ export default function AgentSidebar({
           );
         })}
       </div>
+
+      {/* Create Agent Button */}
+      {onCreateAgent && (
+        <div className="px-3 py-3 border-t border-card-border flex-shrink-0">
+          <button
+            onClick={onCreateAgent}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 border-dashed border-card-border hover:border-accent/50 hover:bg-accent/5 transition-all group"
+          >
+            <span className="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center text-accent text-sm group-hover:bg-accent/20 transition-colors">
+              +
+            </span>
+            <span className="text-xs font-semibold text-muted group-hover:text-foreground transition-colors">
+              Deploy New Agent
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

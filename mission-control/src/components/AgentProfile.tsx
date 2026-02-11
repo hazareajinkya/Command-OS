@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const levelBadge: Record<string, { label: string; color: string }> = {
   lead: { label: "Lead", color: "bg-accent/20 text-accent border border-accent/30" },
@@ -49,12 +49,24 @@ export default function AgentProfile({
   const notifications = useQuery(api.notifications.getUndeliveredForAgent, {
     agentId,
   });
+  const agentCosts = useQuery(api.costs.agentStats, { agentId });
+  const directMessages = useQuery(api.directMessages.listByAgent, { agentId });
 
   const sendChat = useMutation(api.chat.send);
+  const sendDM = useMutation(api.directMessages.sendFromCommander);
   const [messageInput, setMessageInput] = useState("");
+  const [dmInput, setDmInput] = useState("");
   const [activeTab, setActiveTab] = useState<
-    "attention" | "timeline" | "messages"
-  >("attention");
+    "commander_chat" | "attention" | "timeline" | "messages" | "usage"
+  >("commander_chat");
+  const dmScrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll DM chat — must be before any early returns (Rules of Hooks)
+  useEffect(() => {
+    if (dmScrollRef.current && activeTab === "commander_chat") {
+      dmScrollRef.current.scrollTop = dmScrollRef.current.scrollHeight;
+    }
+  }, [directMessages, activeTab]);
 
   if (!agent) {
     return (
@@ -72,6 +84,15 @@ export default function AgentProfile({
       content: messageInput.trim(),
     });
     setMessageInput("");
+  };
+
+  const handleSendDM = async () => {
+    if (!dmInput.trim()) return;
+    await sendDM({
+      agentId,
+      content: dmInput.trim(),
+    });
+    setDmInput("");
   };
 
   const pendingNotifications = notifications?.filter((n) => !n.delivered) ?? [];
@@ -149,26 +170,151 @@ export default function AgentProfile({
       )}
 
       {/* Tabs */}
-      <div className="px-5 py-2 border-b border-card-border flex gap-1">
-        {(["attention", "timeline", "messages"] as const).map((tab) => (
+      <div className="px-5 py-2 border-b border-card-border flex gap-1 overflow-x-auto">
+        {(["commander_chat", "attention", "timeline", "messages", "usage"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`text-[11px] px-3 py-1.5 rounded transition-colors capitalize ${
+            className={`text-[11px] px-3 py-1.5 rounded transition-colors capitalize whitespace-nowrap flex items-center gap-1 ${
               activeTab === tab
                 ? "bg-accent/10 text-accent font-semibold"
                 : "text-muted hover:text-foreground"
             }`}
           >
-            {tab === "attention" ? `⚡ Attention` : ""}
-            {tab === "timeline" ? `📋 Timeline` : ""}
-            {tab === "messages" ? `💬 Messages` : ""}
+            {tab === "commander_chat" && (
+              <>
+                🎖️ Chat
+                {directMessages && directMessages.filter((m) => !m.isFromCommander).length > 0 && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                )}
+              </>
+            )}
+            {tab === "attention" && "⚡ Attention"}
+            {tab === "timeline" && "📋 Timeline"}
+            {tab === "messages" && "💬 Squad"}
+            {tab === "usage" && "💲 Usage"}
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-3">
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Commander Chat Tab */}
+        {activeTab === "commander_chat" && (
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* Chat Messages */}
+            <div
+              ref={dmScrollRef}
+              className="flex-1 overflow-y-auto px-5 py-3 space-y-3"
+            >
+              {!directMessages || directMessages.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center text-2xl mx-auto mb-3">
+                    {agent.avatar ?? "🤖"}
+                  </div>
+                  <p className="text-xs text-foreground font-medium mb-1">
+                    Start a conversation with {agent.name}
+                  </p>
+                  <p className="text-[10px] text-muted leading-relaxed max-w-[250px] mx-auto">
+                    This is your private channel with {agent.name}.
+                    They can suggest tasks, report status, and discuss work
+                    directly with you.
+                  </p>
+                </div>
+              ) : (
+                directMessages.map((msg) => {
+                  const isSystem = msg.messageType === "system";
+                  const isTaskSuggestion = msg.messageType === "task_suggestion";
+                  const isCommander = msg.isFromCommander;
+
+                  if (isSystem) {
+                    return (
+                      <div
+                        key={msg._id}
+                        className="text-center py-2"
+                      >
+                        <p className="text-[10px] text-muted bg-surface/50 inline-block px-3 py-1.5 rounded-full">
+                          {msg.content}
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={msg._id}
+                      className={`flex gap-2.5 ${isCommander ? "flex-row-reverse" : ""}`}
+                    >
+                      {/* Avatar */}
+                      <div
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${
+                          isCommander
+                            ? "bg-accent/20 text-accent"
+                            : "bg-surface border border-card-border"
+                        }`}
+                      >
+                        {isCommander ? "🎖️" : agent.avatar ?? "🤖"}
+                      </div>
+
+                      {/* Message Bubble */}
+                      <div
+                        className={`max-w-[80%] rounded-xl px-3 py-2 ${
+                          isCommander
+                            ? "bg-accent/10 border border-accent/20"
+                            : isTaskSuggestion
+                              ? "bg-success/5 border border-success/20"
+                              : "bg-surface/50 border border-card-border"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-[10px] font-semibold text-foreground/70">
+                            {isCommander ? "Commander" : agent.name}
+                          </span>
+                          {isTaskSuggestion && (
+                            <span className="text-[8px] bg-success/20 text-success px-1.5 py-0.5 rounded font-bold">
+                              SUGGESTION
+                            </span>
+                          )}
+                          <span className="text-[9px] text-muted font-mono">
+                            {timeAgo(msg._creationTime)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                          {msg.content}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* DM Input */}
+            <div className="px-5 py-3 border-t border-card-border flex-shrink-0">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={dmInput}
+                  onChange={(e) => setDmInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendDM()}
+                  placeholder={`Message ${agent.name}...`}
+                  className="flex-1 text-xs bg-surface border border-card-border rounded-lg px-3 py-2.5 text-foreground placeholder:text-muted/50 focus:outline-none focus:border-accent/50"
+                />
+                <button
+                  onClick={handleSendDM}
+                  disabled={!dmInput.trim()}
+                  className="text-xs bg-accent text-black font-semibold px-3 py-2.5 rounded-lg hover:bg-accent-dim transition-colors disabled:opacity-30"
+                >
+                  ➤
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Other tabs wrapped in scrollable container */}
+        {activeTab !== "commander_chat" && (
+        <div className="flex-1 overflow-y-auto px-5 py-3">
         {activeTab === "attention" && (
           <div className="space-y-3">
             <p className="text-[10px] text-muted font-mono uppercase">
@@ -256,6 +402,124 @@ export default function AgentProfile({
             </p>
           </div>
         )}
+
+        {activeTab === "usage" && (
+          <div className="space-y-4">
+            <p className="text-[10px] text-muted font-mono uppercase">
+              Token &amp; Cost Usage for {agent.name}
+            </p>
+            {agentCosts && agentCosts.entries > 0 ? (
+              <>
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-surface/50 rounded-lg p-3 border border-card-border text-center">
+                    <p className="text-xl font-bold text-foreground font-mono">
+                      ${agentCosts.totalCost.toFixed(4)}
+                    </p>
+                    <p className="text-[9px] text-muted font-mono uppercase mt-0.5">
+                      Total Spend
+                    </p>
+                  </div>
+                  <div className="bg-surface/50 rounded-lg p-3 border border-card-border text-center">
+                    <p className="text-xl font-bold text-foreground font-mono">
+                      {agentCosts.totalTokens >= 1000000
+                        ? `${(agentCosts.totalTokens / 1000000).toFixed(1)}M`
+                        : `${(agentCosts.totalTokens / 1000).toFixed(1)}k`}
+                    </p>
+                    <p className="text-[9px] text-muted font-mono uppercase mt-0.5">
+                      Total Tokens
+                    </p>
+                  </div>
+                  <div className="bg-surface/50 rounded-lg p-3 border border-card-border text-center">
+                    <p className="text-lg font-bold text-foreground font-mono">
+                      {(agentCosts.promptTokens / 1000).toFixed(1)}k
+                    </p>
+                    <p className="text-[9px] text-muted font-mono uppercase mt-0.5">
+                      Input Tokens
+                    </p>
+                  </div>
+                  <div className="bg-surface/50 rounded-lg p-3 border border-card-border text-center">
+                    <p className="text-lg font-bold text-foreground font-mono">
+                      {(agentCosts.completionTokens / 1000).toFixed(1)}k
+                    </p>
+                    <p className="text-[9px] text-muted font-mono uppercase mt-0.5">
+                      Output Tokens
+                    </p>
+                  </div>
+                </div>
+
+                {/* By Model */}
+                {agentCosts.byModel.length > 0 && (
+                  <div>
+                    <p className="text-[9px] text-muted font-mono uppercase mb-2">
+                      By Model
+                    </p>
+                    <div className="space-y-1.5">
+                      {agentCosts.byModel.map((m) => (
+                        <div
+                          key={m.model}
+                          className="flex items-center justify-between bg-surface/50 rounded px-3 py-2 border border-card-border"
+                        >
+                          <span className="text-[10px] text-foreground/80 font-mono truncate max-w-[60%]">
+                            {m.model.split("/").pop()}
+                          </span>
+                          <span className="text-[10px] font-mono text-muted">
+                            {(m.tokens / 1000).toFixed(1)}k •{" "}
+                            <span className="text-foreground font-semibold">
+                              ${m.cost.toFixed(4)}
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* By Action */}
+                {agentCosts.byAction.length > 0 && (
+                  <div>
+                    <p className="text-[9px] text-muted font-mono uppercase mb-2">
+                      By Action
+                    </p>
+                    <div className="space-y-1.5">
+                      {agentCosts.byAction.map((a) => (
+                        <div
+                          key={a.action}
+                          className="flex items-center justify-between bg-surface/50 rounded px-3 py-2 border border-card-border"
+                        >
+                          <span className="text-[10px] text-foreground/80 capitalize">
+                            {a.action.replace(/_/g, " ")}
+                          </span>
+                          <span className="text-[10px] font-mono text-muted">
+                            {(a.tokens / 1000).toFixed(1)}k •{" "}
+                            <span className="text-foreground font-semibold">
+                              ${a.cost.toFixed(4)}
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[9px] text-muted text-center pt-1">
+                  {agentCosts.entries} usage entries recorded
+                </p>
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-xs text-muted">
+                  No usage data recorded yet.
+                </p>
+                <p className="text-[10px] text-muted/60 mt-1">
+                  Cost tracking activates when {agent.name} logs token usage.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      )}
       </div>
 
       {/* Send Message Input */}

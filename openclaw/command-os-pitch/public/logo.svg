@@ -1,0 +1,45 @@
+<svg width="200" height="220" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bodyGrad" x1="100" y1="40" x2="100" y2="180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E25555" />
+      <stop offset="1" stop-color="#C94444" />
+    </linearGradient>
+    <linearGradient id="clawGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#D94E4E" />
+      <stop offset="1" stop-color="#B84040" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Left antenna -->
+  <path d="M75 45 Q65 25 60 15" stroke="#E25555" stroke-width="4" stroke-linecap="round" fill="none" />
+  
+  <!-- Right antenna -->
+  <path d="M125 45 Q135 25 140 15" stroke="#E25555" stroke-width="4" stroke-linecap="round" fill="none" />
+  
+  <!-- Left claw/ear -->
+  <ellipse cx="28" cy="110" rx="24" ry="28" fill="url(#clawGrad)" />
+  
+  <!-- Right claw/ear -->
+  <ellipse cx="172" cy="110" rx="24" ry="28" fill="url(#clawGrad)" />
+  
+  <!-- Main body -->
+  <ellipse cx="100" cy="105" rx="68" ry="72" fill="url(#bodyGrad)" />
+  
+  <!-- Left eye background -->
+  <ellipse cx="75" cy="95" rx="14" ry="16" fill="#1a1a1a" />
+  
+  <!-- Right eye background -->
+  <ellipse cx="125" cy="95" rx="14" ry="16" fill="#1a1a1a" />
+  
+  <!-- Left eye pupil -->
+  <circle cx="75" cy="95" r="5" fill="#4AEAEA" />
+  
+  <!-- Right eye pupil -->
+  <circle cx="125" cy="95" r="5" fill="#4AEAEA" />
+  
+  <!-- Left leg -->
+  <rect x="70" y="170" width="14" height="35" rx="7" fill="url(#clawGrad)" />
+  
+  <!-- Right leg -->
+  <rect x="116" y="170" width="14" height="35" rx="7" fill="url(#clawGrad)" />
+</svg>

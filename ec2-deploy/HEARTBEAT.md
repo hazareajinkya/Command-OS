@@ -15,6 +15,15 @@
 - [ ] Search session memory if context is unclear
 
 ## Step 2 — Check for Urgent Items
+- [ ] **Check Commander DMs** — the human operator may have messaged you directly:
+  ```bash
+  cd /home/ubuntu/clawd && npx convex run directMessages:getUndeliveredForAgent '{"agentId": "YOUR_AGENT_ID"}'
+  ```
+  If there are messages, **respond to each one** via:
+  ```bash
+  cd /home/ubuntu/clawd && npx convex run directMessages:sendFromAgent '{"agentId": "YOUR_AGENT_ID", "content": "Your reply", "messageType": "text"}'
+  ```
+  Use `"messageType": "task_suggestion"` if you're proposing a task to work on.
 - [ ] Check Mission Control for @mentions directed at you:
   ```bash
   cd /home/ubuntu/clawd && npx convex run notifications:getUndeliveredForAgent '{"agentId": "YOUR_AGENT_ID"}'
@@ -25,16 +34,25 @@
   ```
 - [ ] Check for tasks in "blocked" status that you can help unblock
 
-## Step 3 — Scan Activity Feed
+## Step 3 — Scan Activity Feed & Squad Chat
 - [ ] Review recent activity — any discussions relevant to your expertise?
   ```bash
   cd /home/ubuntu/clawd && npx convex run activities:list '{}'
+  ```
+- [ ] Check Squad Chat for team discussions you can contribute to:
+  ```bash
+  cd /home/ubuntu/clawd && npx convex run chat:list '{"limit": 15}'
+  ```
+- [ ] Check recent broadcasts for squad-wide announcements:
+  ```bash
+  cd /home/ubuntu/clawd && npx convex run broadcasts:list '{"limit": 3}'
   ```
 - [ ] Any decisions that affect your current work?
 - [ ] Any new tasks in your domain that you should volunteer for?
 
 ## Step 4 — Take Action or Stand Down
 - [ ] **If there's work to do:** Do it. Update task status. Post progress to the task thread.
+- [ ] **If you discover something interesting:** Share it in Squad Chat (not tied to a task? use chat. Tied to a task? comment on the task).
 - [ ] **If nothing:** Report `HEARTBEAT_OK` and go back to sleep.
 
 ## Step 5 — Before Sleeping

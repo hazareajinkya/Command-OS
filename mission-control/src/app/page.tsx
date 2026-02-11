@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -10,16 +10,169 @@ import TaskBoard from "../components/TaskBoard";
 import LiveFeed from "../components/LiveFeed";
 import TaskDetail from "../components/TaskDetail";
 import CreateTask from "../components/CreateTask";
+import CreateAgent from "../components/CreateAgent";
 import SquadChat from "../components/SquadChat";
 import BroadcastModal from "../components/BroadcastModal";
 import DocsPanel from "../components/DocsPanel";
 
-function Clock() {
-  const [time, setTime] = useState(new Date());
+function CostCounter() {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const globalCosts = useQuery(api.costs.globalStats);
+
+  // Close dropdown on outside click
   useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const hasCosts = globalCosts && globalCosts.entries > 0;
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setShowDropdown(!showDropdown)}
+        className="text-[10px] bg-surface border border-card-border text-muted font-mono px-3 py-1.5 rounded-lg hover:border-accent/50 hover:text-foreground transition-colors flex items-center gap-1.5"
+        title="API Usage & Costs"
+      >
+        <span className="text-[10px]">💲</span>
+        {hasCosts ? (
+          <span>${globalCosts.totalCost.toFixed(2)}</span>
+        ) : (
+          <span>$0.00</span>
+        )}
+      </button>
+
+      {/* Dropdown Panel */}
+      {showDropdown && (
+        <div className="absolute right-0 top-full mt-2 w-80 bg-card-bg border border-card-border rounded-xl shadow-lg z-50 overflow-hidden">
+          {/* Header */}
+          <div className="px-4 py-3 border-b border-card-border bg-surface/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-muted font-mono uppercase tracking-wider">
+                  API Usage
+                </p>
+                <p className="text-lg font-bold text-foreground font-mono mt-0.5">
+                  ${hasCosts ? globalCosts.totalCost.toFixed(4) : "0.0000"}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-[9px] text-muted font-mono uppercase">
+                  Today
+                </p>
+                <p className="text-sm font-bold text-foreground font-mono mt-0.5">
+                  ${hasCosts ? globalCosts.todayCost.toFixed(4) : "0.0000"}
+                </p>
+              </div>
+            </div>
+            {hasCosts && (
+              <div className="flex gap-4 mt-2">
+                <p className="text-[9px] text-muted font-mono">
+                  Total:{" "}
+                  {globalCosts.totalTokens >= 1000000
+                    ? `${(globalCosts.totalTokens / 1000000).toFixed(1)}M`
+                    : `${(globalCosts.totalTokens / 1000).toFixed(1)}k`}{" "}
+                  tokens
+                </p>
+                <p className="text-[9px] text-muted font-mono">
+                  Today:{" "}
+                  {globalCosts.todayTokens >= 1000000
+                    ? `${(globalCosts.todayTokens / 1000000).toFixed(1)}M`
+                    : `${(globalCosts.todayTokens / 1000).toFixed(1)}k`}{" "}
+                  tokens
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Agent Breakdown */}
+          <div className="px-4 py-3 max-h-64 overflow-y-auto">
+            {hasCosts && globalCosts.agentBreakdown.length > 0 ? (
+              <>
+                <p className="text-[9px] text-muted font-mono uppercase mb-2">
+                  Cost by Agent
+                </p>
+                <div className="space-y-1.5">
+                  {globalCosts.agentBreakdown.map((item) => {
+                    const pct =
+                      globalCosts.totalCost > 0
+                        ? (item.cost / globalCosts.totalCost) * 100
+                        : 0;
+                    return (
+                      <div key={item.agentId}>
+                        <div className="flex items-center justify-between text-xs mb-0.5">
+                          <span className="flex items-center gap-1.5 text-foreground/80">
+                            <span className="text-sm">{item.agentAvatar}</span>
+                            {item.agentName}
+                          </span>
+                          <span className="font-mono text-muted text-[10px]">
+                            ${item.cost.toFixed(4)}
+                          </span>
+                        </div>
+                        {/* Usage bar */}
+                        <div className="w-full h-1 bg-surface rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-accent/60 rounded-full"
+                            style={{ width: `${Math.max(pct, 2)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-xs text-muted">No usage data yet.</p>
+                <p className="text-[10px] text-muted/60 mt-1">
+                  Costs appear when agents log token usage.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          {hasCosts && (
+            <div className="px-4 py-2 border-t border-card-border bg-surface/20">
+              <p className="text-[9px] text-muted text-center font-mono">
+                {globalCosts.entries} API calls tracked
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Clock() {
+  const [time, setTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setTime(new Date());
     const interval = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  if (!time) {
+    return (
+      <div className="text-right">
+        <p className="text-sm font-mono font-bold text-foreground tracking-wider">
+          --:--:--
+        </p>
+        <p className="text-[9px] text-muted font-mono uppercase">---</p>
+      </div>
+    );
+  }
 
   const hours = time.getHours().toString().padStart(2, "0");
   const minutes = time.getMinutes().toString().padStart(2, "0");
@@ -44,6 +197,7 @@ export default function Home() {
   const [selectedTaskId, setSelectedTaskId] = useState<Id<"tasks"> | null>(null);
   const [selectedAgentId, setSelectedAgentId] = useState<Id<"agents"> | null>(null);
   const [showCreateTask, setShowCreateTask] = useState(false);
+  const [showCreateAgent, setShowCreateAgent] = useState(false);
   const [showBroadcast, setShowBroadcast] = useState(false);
   const [showDocs, setShowDocs] = useState(false);
   const [rightPanel, setRightPanel] = useState<"feed" | "chat" | "profile">("feed");
@@ -119,6 +273,9 @@ export default function Home() {
               📄 Docs
             </button>
 
+            {/* Cost Counter */}
+            <CostCounter />
+
             {/* Separator */}
             <div className="w-px h-6 bg-card-border mx-1" />
 
@@ -142,6 +299,7 @@ export default function Home() {
         <AgentSidebar
           selectedAgentId={selectedAgentId}
           onSelectAgent={handleSelectAgent}
+          onCreateAgent={() => setShowCreateAgent(true)}
         />
 
         {/* Center: Task Board */}
@@ -221,6 +379,9 @@ export default function Home() {
       )}
       {showCreateTask && (
         <CreateTask onClose={() => setShowCreateTask(false)} />
+      )}
+      {showCreateAgent && (
+        <CreateAgent onClose={() => setShowCreateAgent(false)} />
       )}
       {showBroadcast && (
         <BroadcastModal onClose={() => setShowBroadcast(false)} />

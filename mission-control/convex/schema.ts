@@ -116,4 +116,33 @@ export default defineSchema({
     delivered: v.boolean(),
   }).index("by_agent", ["mentionedAgentId"])
     .index("by_delivered", ["delivered"]),
+
+  // ─── Direct Messages (Commander ↔ Agent 1-on-1) ────────
+  directMessages: defineTable({
+    agentId: v.id("agents"),       // which agent this chat is with
+    isFromCommander: v.boolean(),  // true = human sent it, false = agent sent it
+    content: v.string(),
+    messageType: v.optional(v.union(
+      v.literal("text"),
+      v.literal("task_suggestion"),  // agent suggests a task to work on
+      v.literal("status_update"),    // agent reporting status
+      v.literal("system")           // system messages (onboarding, etc.)
+    )),
+    delivered: v.optional(v.boolean()), // for commander→agent msgs: has it been sent to OpenClaw?
+  }).index("by_agent", ["agentId"])
+    .index("by_delivered", ["delivered"]),
+
+  // ─── Cost Tracking (Token & Dollar Usage) ───────────────
+  costs: defineTable({
+    agentId: v.id("agents"),
+    taskId: v.optional(v.id("tasks")),
+    model: v.string(),                    // "openrouter/moonshotai/kimi-k2.5"
+    promptTokens: v.number(),             // input tokens
+    completionTokens: v.number(),         // output tokens
+    totalTokens: v.number(),              // prompt + completion
+    costUsd: v.number(),                  // total cost in USD
+    action: v.string(),                   // "heartbeat", "task_work", "delegation", etc.
+    note: v.optional(v.string()),         // optional description
+  }).index("by_agent", ["agentId"])
+    .index("by_task", ["taskId"]),
 });

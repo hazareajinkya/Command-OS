@@ -7,21 +7,20 @@ export default function Hero() {
         {/* Red 3D glow behind logo */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-40 w-40 rounded-full bg-[radial-gradient(circle,_rgba(200,50,50,0.5)_0%,_rgba(150,30,30,0.3)_40%,_transparent_70%)] blur-xl" />
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-32 w-32 rounded-full bg-[radial-gradient(circle,_rgba(220,60,60,0.4)_0%,_transparent_60%)] blur-lg" />
-        <Image src="/logo2.svg" alt="AICE OpenClaw logo" width={140} height={140} priority className="relative z-10" />
+        <Image src="/logo2.svg" alt="Command OS logo" width={140} height={140} priority className="relative z-10" />
       </div>
 
       <div className="space-y-4">
         <h1 className="gradient-text text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-          AICE OpenClaw
+          Command OS
         </h1>
         <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[#ff6b6b]">
-          World&apos;s First OpenClaw Service Provider
+          Deployed on Your VPS. Your Data. Your Control.
         </p>
       </div>
 
       <p className="max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg" style={{ fontFamily: 'var(--font-inter), Inter, sans-serif' }}>
-        We set up your OpenClaw in a secure, production-ready environment.
-        No terminal commands. No hassle. Just working AI.
+        Build your AI team for just $199. Deploy on your own infrastructure &mdash; fully customised, fully yours.
       </p>
 
       <a

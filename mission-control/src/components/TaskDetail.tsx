@@ -36,12 +36,14 @@ export default function TaskDetail({
   const messages = useQuery(api.messages.listByTask, { taskId });
   const agents = useQuery(api.agents.list);
   const documents = useQuery(api.documents.listByTask, { taskId });
+  const costStats = useQuery(api.costs.taskStats, { taskId });
   const updateStatus = useMutation(api.tasks.updateStatus);
   const postMessage = useMutation(api.messages.create);
 
   const [newComment, setNewComment] = useState("");
   const [selectedAgent, setSelectedAgent] = useState<Id<"agents"> | "">("");
   const [showContent, setShowContent] = useState(false);
+  const [showCosts, setShowCosts] = useState(false);
   const [expandedDocId, setExpandedDocId] = useState<string | null>(null);
 
   if (!task || !agents) {
@@ -199,12 +201,105 @@ export default function TaskDetail({
               )}
             </button>
             <button
+              onClick={() => setShowCosts(!showCosts)}
+              className="text-[11px] text-muted hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              {showCosts ? "▼" : "▶"} Usage
+              {costStats && costStats.entries > 0 && (
+                <span className="bg-surface text-muted text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-1 border border-card-border">
+                  ${costStats.totalCost.toFixed(4)}
+                </span>
+              )}
+            </button>
+            <button
               onClick={handleArchive}
               className="text-[11px] text-success hover:text-success/80 transition-colors ml-4"
             >
               ✅ Archive Task
             </button>
           </div>
+
+          {/* Expandable Cost/Usage Panel */}
+          {showCosts && (
+            <div className="bg-surface/30 rounded-lg border border-card-border p-3 space-y-2">
+              {costStats && costStats.entries > 0 ? (
+                <>
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-foreground font-mono">
+                        ${costStats.totalCost.toFixed(4)}
+                      </p>
+                      <p className="text-[9px] text-muted font-mono uppercase">
+                        Total Cost
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-foreground font-mono">
+                        {(costStats.totalTokens / 1000).toFixed(1)}k
+                      </p>
+                      <p className="text-[9px] text-muted font-mono uppercase">
+                        Total Tokens
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-foreground font-mono">
+                        {(costStats.promptTokens / 1000).toFixed(1)}k
+                      </p>
+                      <p className="text-[9px] text-muted font-mono uppercase">
+                        Input Tokens
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-foreground font-mono">
+                        {(costStats.completionTokens / 1000).toFixed(1)}k
+                      </p>
+                      <p className="text-[9px] text-muted font-mono uppercase">
+                        Output Tokens
+                      </p>
+                    </div>
+                  </div>
+                  {/* Per-agent breakdown */}
+                  {costStats.byAgent.length > 0 && (
+                    <div className="pt-2 border-t border-card-border/50">
+                      <p className="text-[9px] text-muted font-mono uppercase mb-1.5">
+                        By Agent
+                      </p>
+                      <div className="space-y-1">
+                        {costStats.byAgent.map((item) => {
+                          const agent = agents?.find(
+                            (a) => a._id === item.agentId
+                          );
+                          return (
+                            <div
+                              key={item.agentId}
+                              className="flex items-center justify-between text-xs"
+                            >
+                              <span className="flex items-center gap-1.5 text-foreground/80">
+                                <span className="text-sm">
+                                  {agent?.avatar ?? "🤖"}
+                                </span>
+                                {agent?.name ?? "Unknown"}
+                              </span>
+                              <span className="font-mono text-muted">
+                                {(item.tokens / 1000).toFixed(1)}k tok •{" "}
+                                <span className="text-foreground">
+                                  ${item.cost.toFixed(4)}
+                                </span>
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-[10px] text-muted italic text-center py-2">
+                  No usage data recorded for this task yet.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Expandable Deliverables / Docs */}
           {showContent && (

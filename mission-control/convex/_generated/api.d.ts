@@ -12,6 +12,8 @@ import type * as activities from "../activities.js";
 import type * as agents from "../agents.js";
 import type * as broadcasts from "../broadcasts.js";
 import type * as chat from "../chat.js";
+import type * as costs from "../costs.js";
+import type * as directMessages from "../directMessages.js";
 import type * as documents from "../documents.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
@@ -30,6 +32,8 @@ declare const fullApi: ApiFromModules<{
   agents: typeof agents;
   broadcasts: typeof broadcasts;
   chat: typeof chat;
+  costs: typeof costs;
+  directMessages: typeof directMessages;
   documents: typeof documents;
   messages: typeof messages;
   notifications: typeof notifications;

@@ -99,11 +99,68 @@ openclaw cron add \
 echo "✅ KAREN heartbeat registered (:13)"
 
 echo ""
+echo "───────────────────────────────────────────────"
+echo "  📊 Setting up Daily Standup..."
+echo ""
+
+# DAILY STANDUP — JARVIS compiles a report at 10:25 PM IST (4:55 PM UTC)
+openclaw cron add \
+  --name "jarvis-daily-standup" \
+  --cron "55 16 * * *" \
+  --session "isolated" \
+  --message "You are JARVIS. It's DAILY STANDUP time. Compile a comprehensive status report and send it to the operator via Telegram.
+
+DO THIS:
+1. Run: cd /home/ubuntu/clawd && npx convex run tasks:list '{}'
+2. Run: cd /home/ubuntu/clawd && npx convex run activities:list '{}'
+3. Run: cd /home/ubuntu/clawd && npx convex run agents:list '{}'
+
+Then compile a standup report in this EXACT format and send it as your response:
+
+📊 DAILY STANDUP — [Today's Date]
+
+✅ COMPLETED TODAY
+• [Agent]: [Task title] — [brief summary]
+
+🔄 IN PROGRESS
+• [Agent]: [Task title] — [current status]
+
+📋 ASSIGNED (Not Started)
+• [Agent]: [Task title]
+
+🚫 BLOCKED
+• [Agent]: [Task title] — [what's needed]
+
+👀 NEEDS REVIEW
+• [Task title] — [who should review]
+
+💬 KEY SQUAD CHAT HIGHLIGHTS
+• [Any notable discussions from today]
+
+📝 KEY DECISIONS
+• [Important decisions made today]
+
+📈 SQUAD STATS
+• Agents Active: X/10
+• Tasks Completed Today: X
+• Tasks In Progress: X
+• Tasks Blocked: X
+
+Also post this standup as a broadcast to Mission Control:
+cd /home/ubuntu/clawd && npx convex run broadcasts:send '{\"message\": \"Daily Standup compiled. Check Telegram for full report.\", \"priority\": \"normal\", \"fromAgentId\": \"YOUR_AGENT_ID\"}'
+
+This is a daily ritual. Be thorough. The operator relies on this to know what happened."
+
+echo "✅ Daily Standup registered (10:25 PM IST / 4:55 PM UTC)"
+
+echo ""
 echo "═══════════════════════════════════════════════"
-echo "  🎯 All 10 heartbeat crons registered!"
+echo "  🎯 All 10 heartbeat crons + Daily Standup registered!"
 echo "  Schedule (staggered every 2 minutes):"
 echo "    :00 JARVIS    :07 VISION    :11 PEPPER"
 echo "    :02 FRIDAY    :08 BANNER    :12 MARK1"
 echo "    :04 EDITH     :10 RHODEY    :13 KAREN"
 echo "    :06 HULKBUSTER"
+echo ""
+echo "  📊 Daily Standup: 10:25 PM IST (JARVIS → Telegram)"
 echo "═══════════════════════════════════════════════"

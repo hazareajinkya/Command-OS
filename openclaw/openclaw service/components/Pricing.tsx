@@ -1,20 +1,20 @@
-const freeTier = [
-  "Fork repo, configure pnpm, Node.js ≥ 22 runtime",
-  "Provision VPS with systemd daemon orchestration",
-  "Initialize OAuth2, persist to oauth.json",
-  "Set sandbox_mode: \"non-main\" for isolation",
-  "Configure WSS gateway on port 18789",
-  "Debug EBADF and PTY spawn failures",
+const basicPlan = [
+  "Pre-built customised AI agents",
+  "Mission Control dashboard",
+  "Telegram integration",
+  "Personal onboarding",
+  "Basic support",
+  "10 skills pre-installed",
 ];
 
-const starterTier = [
-  "We set it up for you",
-  "No coding required",
-  "Runs 24/7 on a virtual server",
-  "Control it from any messenger",
-  "10 skills pre-installed",
-  "30 min consultation call to tailor skills for your business",
-  "Support if you get stuck",
+const proPlan = [
+  "Customised unlimited AI agents",
+  "Customisable Mission Control dashboard",
+  "Telegram integration",
+  "Personal onboarding",
+  "Priority support — dedicated success manager",
+  "100+ skills customisable",
+  "Step-by-step onboarding with ClawBot",
 ];
 
 
@@ -30,40 +30,52 @@ export default function Pricing() {
       <h2 className="mt-3 text-3xl font-semibold text-white">Pick your lane.</h2>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-2 max-w-4xl">
+        {/* Basic Plan */}
         <div className="glass-card flex h-full flex-col rounded-2xl p-6">
-          <h3 className="text-2xl font-semibold text-white">Free</h3>
-          <p className="mt-2 text-sm text-slate-400">
-            For engineers who don’t flinch at setup docs.
-          </p>
+          <h3 className="text-2xl font-semibold text-white">Basic</h3>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-3xl font-semibold text-white">$199</span>
+            <span className="text-xs text-slate-400">one-time setup</span>
+          </div>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-lg font-semibold text-white">+ $99</span>
+            <span className="text-xs text-slate-400">/month service fee</span>
+          </div>
           <ul className="mt-6 space-y-3 text-sm text-slate-300">
-            {freeTier.map((item) => (
+            {basicPlan.map((item) => (
               <li key={item} className="flex gap-3">
-                <span className="text-[#ff6b6b]">→</span>
+                <span className="text-[#ff6b6b]">✓</span>
                 <span>{item}</span>
               </li>
             ))}
           </ul>
           <a
-            href="/guide"
+            href="#pricing"
             className="mt-8 inline-block rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:text-white text-center"
           >
-            Get Guide
+            Get Started →
           </a>
         </div>
 
+        {/* Pro Plan */}
         <div id="plan-119" className="glass-card glow-card relative flex h-full flex-col rounded-2xl p-6">
           <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] font-semibold badge">
             MOST POPULAR
           </div>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-3xl font-semibold text-white">$99</h3>
-            <span className="text-xs text-slate-400">/one-time</span>
+          <h3 className="text-2xl font-semibold text-white">Pro</h3>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-3xl font-semibold text-white">$499</span>
+            <span className="text-xs text-slate-400">one-time setup</span>
+          </div>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-lg font-semibold text-white">+ $99</span>
+            <span className="text-xs text-slate-400">/month service fee</span>
           </div>
           <ul className="mt-6 space-y-3 text-sm text-slate-300">
-            {starterTier.map((item, index) => (
+            {proPlan.map((item, index) => (
               <li key={item} className="flex gap-3">
                 <span className="text-[#ff6b6b]">✓</span>
-                <span className={index === 5 ? "text-[#2dd4bf]" : ""}>{item}</span>
+                <span className={index === 4 ? "text-[#2dd4bf]" : ""}>{item}</span>
               </li>
             ))}
           </ul>

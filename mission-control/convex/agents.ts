@@ -63,6 +63,9 @@ export const create = mutation({
     ),
     about: v.optional(v.string()),
     skills: v.optional(v.array(v.string())),
+    personality: v.optional(v.string()),
+    whatTheyCareAbout: v.optional(v.array(v.string())),
+    model: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const agentId = await ctx.db.insert("agents", {
@@ -74,6 +77,10 @@ export const create = mutation({
       level: args.level,
       about: args.about,
       skills: args.skills,
+      personality: args.personality,
+      whatTheyCareAbout: args.whatTheyCareAbout,
+      model: args.model,
+      deployed: false, // deploy-daemon on EC2 will pick this up
     });
 
     // Log activity
@@ -84,6 +91,34 @@ export const create = mutation({
     });
 
     return agentId;
+  },
+});
+
+/** Get agents that haven't been deployed to EC2 yet */
+export const getUndeployed = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("agents")
+      .withIndex("by_deployed", (q) => q.eq("deployed", false))
+      .collect();
+  },
+});
+
+/** Mark an agent as deployed on EC2 */
+export const markDeployed = mutation({
+  args: { id: v.id("agents") },
+  handler: async (ctx, args) => {
+    const agent = await ctx.db.get(args.id);
+    if (!agent) throw new Error("Agent not found");
+
+    await ctx.db.patch(args.id, { deployed: true });
+
+    await ctx.db.insert("activities", {
+      type: "agent_status_changed",
+      agentId: args.id,
+      message: `${agent.name} has been fully deployed to EC2 (soul + cron + session)`,
+    });
   },
 });
 

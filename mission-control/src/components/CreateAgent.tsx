@@ -540,7 +540,7 @@ export default function CreateAgent({ onClose }: { onClose: () => void }) {
     try {
       const sessionKey = generateSessionKey(name);
 
-      // Create the agent
+      // Create the agent (with soul data — deploy-daemon on EC2 picks this up)
       const agentId = await createAgent({
         name: name.trim(),
         role: role.trim(),
@@ -549,6 +549,11 @@ export default function CreateAgent({ onClose }: { onClose: () => void }) {
         level,
         about: about.trim() || undefined,
         skills: skills.length > 0 ? skills : undefined,
+        personality: personality.trim() || undefined,
+        whatTheyCareAbout: whatTheyCareAbout.filter((v) => v.trim()).length > 0
+          ? whatTheyCareAbout.filter((v) => v.trim())
+          : undefined,
+        model: selectedModel || undefined,
       });
 
       // Send the onboarding system message
@@ -1021,15 +1026,21 @@ export default function CreateAgent({ onClose }: { onClose: () => void }) {
                     1. Agent profile created in Mission Control
                   </p>
                   <p>
-                    2. Soul configuration saved
+                    2. Soul & personality saved to Convex
                   </p>
                   <p>
-                    3. {name || "Agent"} introduces themselves via Commander Chat
+                    3. EC2 auto-provisions: soul file, memory, heartbeat cron
                   </p>
                   <p>
-                    4. {name || "Agent"} will suggest their first task to you
+                    4. {name || "Agent"} wakes up and introduces themselves
+                  </p>
+                  <p>
+                    5. {name || "Agent"} checks for tasks and DMs every 15 min
                   </p>
                 </div>
+                <p className="text-[10px] text-muted mt-2 italic">
+                  Fully automated — no manual EC2 setup needed
+                </p>
               </div>
             </div>
           )}

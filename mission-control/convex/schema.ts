@@ -22,7 +22,13 @@ export default defineSchema({
     ),
     about: v.optional(v.string()), // Agent description/bio
     skills: v.optional(v.array(v.string())), // Skill tags
-  }).index("by_session_key", ["sessionKey"]),
+    personality: v.optional(v.string()), // Soul personality description
+    whatTheyCareAbout: v.optional(v.array(v.string())), // Values
+    model: v.optional(v.string()), // AI model (kimi-k2.5, claude-4.6-opus, etc.)
+    deployed: v.optional(v.boolean()), // Has this agent been provisioned on EC2?
+    profileImage: v.optional(v.string()), // Path to profile photo e.g. "/agents/jarvis.png"
+  }).index("by_session_key", ["sessionKey"])
+    .index("by_deployed", ["deployed"]),
 
   // ─── Task Board ───────────────────────────────────────────
   tasks: defineTable({
@@ -131,6 +137,11 @@ export default defineSchema({
     delivered: v.optional(v.boolean()), // for commander→agent msgs: has it been sent to OpenClaw?
   }).index("by_agent", ["agentId"])
     .index("by_delivered", ["delivered"]),
+
+  // ─── System Settings (Pause/Unpause Squad) ──────────────
+  systemSettings: defineTable({
+    paused: v.boolean(), // when true: no heartbeats, no notification delivery, no OpenRouter usage
+  }),
 
   // ─── Cost Tracking (Token & Dollar Usage) ───────────────
   costs: defineTable({

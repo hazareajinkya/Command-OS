@@ -64,14 +64,30 @@ export const unreadCount = query({
 export const getUndelivered = query({
   args: {},
   handler: async (ctx) => {
-    // Get all commander messages not yet delivered to OpenClaw
-    const all = await ctx.db
+    // Get messages explicitly marked delivered: false
+    const explicitFalse = await ctx.db
       .query("directMessages")
       .withIndex("by_delivered", (q) => q.eq("delivered", false))
       .collect();
 
-    // Only commander→agent messages need delivery
-    const toDeliver = all.filter((m) => m.isFromCommander);
+    // Also get messages with no delivered field (legacy/undefined)
+    // These won't show up in the index, so scan all and filter
+    const allMessages = await ctx.db
+      .query("directMessages")
+      .collect();
+    const missingField = allMessages.filter(
+      (m) => m.isFromCommander && m.delivered === undefined
+    );
+
+    // Combine and deduplicate
+    const combined = [...explicitFalse, ...missingField];
+    const seen = new Set<string>();
+    const toDeliver = combined.filter((m) => {
+      if (!m.isFromCommander) return false;
+      if (seen.has(m._id)) return false;
+      seen.add(m._id);
+      return true;
+    });
 
     // Enrich with agent info for the daemon
     const enriched = await Promise.all(
@@ -98,7 +114,16 @@ export const getUndeliveredForAgent = query({
       .withIndex("by_agent", (q) => q.eq("agentId", args.agentId))
       .collect();
 
-    return messages.filter((m) => m.isFromCommander && m.delivered === false);
+    // Catch messages where delivered is false OR undefined (legacy messages without the field)
+    return messages.filter((m) => m.isFromCommander && m.delivered !== true);
+  },
+});
+
+/** Reset delivered status on messages (used to re-queue failed deliveries) */
+export const resetDelivered = mutation({
+  args: { id: v.id("directMessages") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { delivered: false });
   },
 });
 

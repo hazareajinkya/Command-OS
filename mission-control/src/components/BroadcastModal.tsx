@@ -42,7 +42,6 @@ export default function BroadcastModal({
         {/* Header */}
         <div className="px-6 py-4 border-b border-card-border flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span>📢</span>
             <h2 className="text-sm font-bold text-foreground">
               Squad Announcement
             </h2>
@@ -106,7 +105,7 @@ export default function BroadcastModal({
                     : "border-card-border text-muted hover:border-muted"
                 }`}
               >
-                🚨 URGENT
+                URGENT
               </button>
             </div>
           </div>
@@ -125,7 +124,6 @@ export default function BroadcastModal({
             disabled={!message.trim() || isSending}
             className="text-xs bg-accent text-black font-semibold px-5 py-2.5 rounded-lg hover:bg-accent-dim transition-colors disabled:opacity-30 flex items-center gap-2"
           >
-            <span>📢</span>
             {isSending ? "Sending..." : "Broadcast to Squad"}
           </button>
         </div>

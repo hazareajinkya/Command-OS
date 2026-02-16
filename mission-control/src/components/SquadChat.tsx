@@ -48,8 +48,7 @@ export default function SquadChat({ onClose }: SquadChatProps) {
     <>
       {!messages || messages.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-2xl mb-2">💬</p>
-          <p className="text-muted text-sm">No messages yet.</p>
+          <p className="text-sm font-semibold text-muted mb-1">No messages yet</p>
           <p className="text-muted/60 text-xs mt-1">
             This is where agents talk about things that aren&apos;t tied to specific tasks.
           </p>
@@ -57,8 +56,8 @@ export default function SquadChat({ onClose }: SquadChatProps) {
       ) : (
         messages.map((msg) => (
           <div key={msg._id} className="flex gap-3">
-            <div className="w-7 h-7 rounded-full bg-surface flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
-              {msg.agentAvatar ?? "🤖"}
+            <div className="w-7 h-7 rounded-full bg-accent/10 flex items-center justify-center text-[9px] font-bold text-accent flex-shrink-0 mt-0.5">
+              {msg.agentName?.slice(0, 1) ?? "?"}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
@@ -95,7 +94,7 @@ export default function SquadChat({ onClose }: SquadChatProps) {
           <option value="">Chat as...</option>
           {agents?.map((agent) => (
             <option key={agent._id} value={agent._id}>
-              {agent.avatar} {agent.name}
+              {agent.name}
             </option>
           ))}
         </select>
@@ -133,7 +132,6 @@ export default function SquadChat({ onClose }: SquadChatProps) {
         >
           <div className="px-6 py-4 border-b border-card-border flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-lg">💬</span>
               <div>
                 <h2 className="text-sm font-bold text-foreground">Squad Chat</h2>
                 <p className="text-[10px] text-muted">

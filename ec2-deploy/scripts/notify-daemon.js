@@ -17,7 +17,7 @@
  *   CONVEX_URL - Your Convex deployment URL (from .env.local)
  */
 
-const { execSync } = require("child_process");
+const { execSync, spawn } = require("child_process");
 const { ConvexHttpClient } = require("convex/browser");
 
 // ─── Config ──────────────────────────────────────────────────
@@ -105,6 +105,64 @@ async function deliverNotifications() {
 }
 
 // ─── Deliver Commander → Agent direct messages ───────────────
+// Unlike @mentions (which can wait for heartbeat), Commander DMs trigger
+// an immediate agent wakeup so the agent replies right away.
+
+// Track agents currently being woken up to avoid duplicate wakeups
+const agentsWakingUp = new Set();
+
+function wakeAgent(sessionKey, agentName, agentId, message) {
+  if (agentsWakingUp.has(sessionKey)) {
+    console.log(`  ⏳ ${agentName} is already processing a DM, skipping duplicate wakeup`);
+    return;
+  }
+
+  agentsWakingUp.add(sessionKey);
+
+  const wakeupMessage = `[COMMANDER DM — REPLY IMMEDIATELY]
+
+The Commander just sent you a direct message. This is highest priority — reply NOW.
+
+Commander's message: "${message}"
+
+Instructions:
+1. First, look up your agent ID: cd /home/ubuntu/clawd && npx convex run agents:getBySessionKey '{"sessionKey": "${sessionKey}"}'
+2. Then reply: cd /home/ubuntu/clawd && npx convex run directMessages:sendFromAgent '{"agentId": "${agentId}", "content": "Your reply here", "messageType": "text"}'
+
+Be conversational and helpful. Reply as yourself, not as a robot. GO.`;
+
+  // Use 'openclaw agent' to trigger an actual agent turn (wakes the brain up)
+  const cmd = `openclaw agent --session-id "${sessionKey}" --message ${JSON.stringify(wakeupMessage)}`;
+
+  console.log(`  🔔 WAKING UP ${agentName} to reply to Commander DM...`);
+
+  // Fire-and-forget: spawn the agent turn in background (can take 30-120s)
+  const child = spawn("bash", ["-c", cmd], {
+    detached: true,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+
+  let output = "";
+  child.stdout.on("data", (d) => { output += d.toString(); });
+  child.stderr.on("data", (d) => { output += d.toString(); });
+
+  child.on("close", (code) => {
+    agentsWakingUp.delete(sessionKey);
+    if (code === 0) {
+      console.log(`  ✅ ${agentName} woke up and replied (exit ${code})`);
+    } else {
+      console.log(`  ⚠️  ${agentName} wakeup finished with exit ${code}`);
+      if (output) console.log(`     Output: ${output.substring(0, 200)}`);
+    }
+  });
+
+  child.on("error", (err) => {
+    agentsWakingUp.delete(sessionKey);
+    console.error(`  ❌ Failed to wake ${agentName}: ${err.message}`);
+  });
+
+  child.unref();
+}
 
 async function deliverDirectMessages() {
   try {
@@ -116,40 +174,45 @@ async function deliverDirectMessages() {
       `💬 Found ${undelivered.length} undelivered direct message(s)...`
     );
 
+    // Group DMs by agent so we send one wakeup per agent with all their messages
+    const dmsByAgent = {};
     for (const dm of undelivered) {
-      const sessionKey = dm.sessionKey || AGENT_MAP[dm.agentId];
+      if (!dmsByAgent[dm.agentId]) {
+        dmsByAgent[dm.agentId] = {
+          agentName: dm.agentName,
+          sessionKey: dm.sessionKey || AGENT_MAP[dm.agentId],
+          messages: [],
+        };
+      }
+      dmsByAgent[dm.agentId].messages.push(dm);
+    }
+
+    for (const [agentId, data] of Object.entries(dmsByAgent)) {
+      const { agentName, sessionKey, messages } = data;
 
       if (!sessionKey) {
         console.warn(
-          `  ⚠️  No session key for agent ID: ${dm.agentId} (${dm.agentName}), skipping.`
+          `  ⚠️  No session key for agent ID: ${agentId} (${agentName}), skipping.`
         );
         continue;
       }
 
-      try {
-        // Format message with Commander prefix so agent knows it's from the human
-        const formattedMessage = `[COMMANDER DM] ${dm.content}
-
----
-Reply to the Commander by running:
-cd /home/ubuntu/clawd && npx convex run directMessages:sendFromAgent '{"agentId": "YOUR_AGENT_ID", "content": "Your reply here", "messageType": "text"}'
-
-If you want to suggest a task, use messageType "task_suggestion" instead.`;
-
-        // Send to the agent's OpenClaw session
-        const cmd = `openclaw sessions send --session "${sessionKey}" --message ${JSON.stringify(formattedMessage)}`;
-        execSync(cmd, { timeout: 10000 });
-
-        // Mark as delivered in Convex
-        await client.mutation("directMessages:markDelivered", {
-          id: dm._id,
-        });
-
-        console.log(`  ✅ [DM] Commander → ${dm.agentName} (${sessionKey}): ${dm.content.substring(0, 60)}...`);
-      } catch (err) {
-        // Agent might be asleep — message stays queued for next heartbeat
-        console.log(`  💤 ${dm.agentName} (${sessionKey}) is asleep, DM queued.`);
+      // Mark all messages as delivered first (so we don't re-deliver on next poll)
+      for (const dm of messages) {
+        try {
+          await client.mutation("directMessages:markDelivered", { id: dm._id });
+        } catch (err) {
+          console.error(`  Failed to mark DM ${dm._id} as delivered:`, err.message);
+        }
       }
+
+      // Combine messages if multiple
+      const combinedMessage = messages.map((dm) => dm.content).join("\n\n");
+
+      console.log(`  ✅ [DM] Commander → ${agentName} (${sessionKey}): ${combinedMessage.substring(0, 80)}...`);
+
+      // Wake the agent up to reply immediately
+      wakeAgent(sessionKey, agentName, agentId, combinedMessage);
     }
   } catch (err) {
     console.error("Poll error (direct messages):", err.message);
@@ -171,6 +234,19 @@ async function main() {
 
   // Poll loop
   while (true) {
+    // Check if squad is paused — if so, skip all delivery (no OpenRouter usage)
+    try {
+      const system = await client.query("system:get");
+      if (system?.paused) {
+        pollCount++;
+        if (pollCount % refreshEvery === 0) await loadAgentMap();
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
+        continue;
+      }
+    } catch (err) {
+      console.error("Poll error (system check):", err.message);
+    }
+
     // Deliver both notification types
     await deliverNotifications();
     await deliverDirectMessages();

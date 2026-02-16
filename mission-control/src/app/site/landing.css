@@ -1,0 +1,117 @@
+/* ═══ Command OS Landing Page Fonts & Animations ═══ */
+
+.font-display {
+  font-family: var(--font-playfair), Georgia, "Times New Roman", serif;
+}
+
+@keyframes landingFadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes landingFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes landingMarquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes landingFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-14px); }
+}
+
+@keyframes landingFloatReverse {
+  0%, 100% { transform: translateY(-8px); }
+  50% { transform: translateY(10px); }
+}
+
+@keyframes landingGlow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes landingPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes landingShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.landing-fade-in-up {
+  animation: landingFadeInUp 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+.landing-fade-in {
+  animation: landingFadeIn 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.landing-marquee {
+  animation: landingMarquee 35s linear infinite;
+}
+
+.landing-float {
+  animation: landingFloat 6s ease-in-out infinite;
+}
+
+.landing-float-reverse {
+  animation: landingFloatReverse 7s ease-in-out infinite;
+}
+
+.landing-glow {
+  animation: landingGlow 4s ease-in-out infinite;
+}
+
+.landing-pulse {
+  animation: landingPulse 3s ease-in-out infinite;
+}
+
+.landing-delay-1 { animation-delay: 0.1s; }
+.landing-delay-2 { animation-delay: 0.2s; }
+.landing-delay-3 { animation-delay: 0.3s; }
+.landing-delay-4 { animation-delay: 0.4s; }
+.landing-delay-5 { animation-delay: 0.5s; }
+.landing-delay-6 { animation-delay: 0.6s; }
+
+.landing-page {
+  scroll-behavior: smooth;
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.07) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.glass {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.landing-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: landingShimmer 3s ease-in-out infinite;
+}

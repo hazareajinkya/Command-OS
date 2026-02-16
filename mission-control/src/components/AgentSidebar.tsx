@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
+import Image from "next/image";
 
 const levelBadge: Record<string, { label: string; color: string }> = {
   lead: { label: "LEAD", color: "bg-accent/20 text-accent" },
@@ -30,7 +31,7 @@ export default function AgentSidebar({
 
   if (!agents) {
     return (
-      <div className="w-[220px] flex-shrink-0 bg-card-bg border-r border-card-border min-h-screen animate-pulse" />
+      <div className="w-[240px] flex-shrink-0 bg-card-bg border-r border-card-border min-h-screen animate-pulse" />
     );
   }
 
@@ -39,16 +40,16 @@ export default function AgentSidebar({
   ).length;
 
   return (
-    <div className="w-[220px] flex-shrink-0 bg-card-bg border-r border-card-border flex flex-col">
+    <div className="w-[240px] flex-shrink-0 bg-card-bg border-r border-card-border flex flex-col">
       {/* Section Header */}
-      <div className="px-4 py-3 border-b border-card-border flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-          <span className="text-xs font-semibold text-foreground tracking-tight">
+      <div className="px-4 py-3.5 border-b border-card-border flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-success animate-pulse" />
+          <span className="text-sm font-semibold text-foreground tracking-tight">
             AGENTS
           </span>
         </div>
-        <span className="text-[10px] text-muted font-mono bg-surface px-1.5 py-0.5 rounded">
+        <span className="text-xs text-muted font-mono bg-surface px-2 py-0.5 rounded">
           {agents.length}
         </span>
       </div>
@@ -56,19 +57,19 @@ export default function AgentSidebar({
       {/* All Agents Button */}
       <button
         onClick={() => onSelectAgent(null)}
-        className={`w-full px-4 py-3 border-b border-card-border flex items-center gap-3 hover:bg-surface/50 transition-colors ${
+        className={`w-full px-4 py-3.5 border-b border-card-border flex items-center gap-3 hover:bg-surface/50 transition-colors ${
           selectedAgentId === null ? "bg-surface/70" : ""
         }`}
       >
-        <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
-          <span className="text-accent text-sm">⚡</span>
+        <div className="w-9 h-9 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center">
+          <span className="text-accent text-xs font-bold">ALL</span>
         </div>
         <div className="text-left">
-          <p className="text-xs font-semibold text-foreground">All Agents</p>
-          <p className="text-[10px] text-muted">
+          <p className="text-sm font-semibold text-foreground">All Agents</p>
+          <p className="text-xs text-muted">
             {agents.length} total
             <span className="text-success ml-1">
-              • {activeCount} ACTIVE
+              • {activeCount} active
             </span>
           </p>
         </div>
@@ -83,16 +84,29 @@ export default function AgentSidebar({
             <button
               key={agent._id}
               onClick={() => onSelectAgent(agent._id)}
-              className={`w-full px-4 py-2.5 flex items-center gap-3 hover:bg-surface/50 transition-all text-left ${
+              className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-surface/50 transition-all text-left ${
                 isSelected ? "bg-surface/70 border-l-2 border-l-accent" : ""
               }`}
             >
-              <div className="w-8 h-8 rounded-full bg-surface flex items-center justify-center text-base flex-shrink-0">
-                {agent.avatar ?? "🤖"}
-              </div>
+              {/* Profile Photo or Emoji Fallback */}
+              {agent.profileImage ? (
+                <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-card-border">
+                  <Image
+                    src={agent.profileImage}
+                    alt={agent.name}
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-xs font-bold text-muted flex-shrink-0 border border-card-border">
+                  {agent.name.slice(0, 2)}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-semibold text-foreground truncate">
+                  <span className="text-sm font-semibold text-foreground truncate">
                     {agent.name}
                   </span>
                   <span
@@ -101,14 +115,14 @@ export default function AgentSidebar({
                     {badge.label}
                   </span>
                 </div>
-                <p className="text-[10px] text-muted truncate">{agent.role}</p>
+                <p className="text-xs text-muted truncate">{agent.role}</p>
               </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
                 <span
-                  className={`w-2 h-2 rounded-full ${statusColor[agent.status] ?? "bg-muted"}`}
+                  className={`w-2.5 h-2.5 rounded-full ${statusColor[agent.status] ?? "bg-muted"}`}
                 />
                 <span className="text-[9px] text-muted font-mono uppercase">
-                  {agent.status === "working" ? "WORKING" : agent.status.toUpperCase()}
+                  {agent.status === "working" ? "WORK" : agent.status.toUpperCase()}
                 </span>
               </div>
             </button>

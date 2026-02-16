@@ -5,11 +5,11 @@ import { api } from "../../convex/_generated/api";
 import { useState } from "react";
 
 const typeLabels: Record<string, { label: string; icon: string }> = {
-  deliverable: { label: "Deliverable", icon: "📦" },
-  research: { label: "Research", icon: "🔬" },
-  protocol: { label: "Protocol", icon: "📋" },
-  notes: { label: "Notes", icon: "📝" },
-  draft: { label: "Draft", icon: "✏️" },
+  deliverable: { label: "Deliverable", icon: "D" },
+  research: { label: "Research", icon: "R" },
+  protocol: { label: "Protocol", icon: "P" },
+  notes: { label: "Notes", icon: "N" },
+  draft: { label: "Draft", icon: "Dr" },
 };
 
 function timeAgo(timestamp: number): string {
@@ -61,7 +61,6 @@ export default function DocsPanel({ onClose }: { onClose: () => void }) {
         <div className="w-[280px] flex-shrink-0 border-r border-card-border flex flex-col">
           <div className="px-4 py-3 border-b border-card-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span>📄</span>
               <h2 className="text-sm font-bold text-foreground">Docs</h2>
             </div>
             <span className="text-[10px] text-muted font-mono">
@@ -113,7 +112,7 @@ export default function DocsPanel({ onClose }: { onClose: () => void }) {
                 >
                   <div className="flex items-center gap-1.5 mb-1">
                     <span className="text-xs">
-                      {typeLabels[doc.type]?.icon ?? "📄"}
+                      {typeLabels[doc.type]?.icon ?? "N"}
                     </span>
                     <span className="text-[9px] text-muted font-mono uppercase">
                       {doc.type}
@@ -175,7 +174,6 @@ export default function DocsPanel({ onClose }: { onClose: () => void }) {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-2xl mb-2">📄</p>
                 <p className="text-muted text-sm">
                   Select a document to view its contents.
                 </p>

@@ -66,7 +66,7 @@ export default function CreateTask({ onClose }: { onClose: () => void }) {
         {/* Header */}
         <div className="px-6 py-4 border-b border-card-border flex items-center justify-between">
           <h2 className="text-sm font-bold text-foreground">
-            📋 Create New Task
+            Create New Task
           </h2>
           <button
             onClick={onClose}
@@ -119,7 +119,7 @@ export default function CreateTask({ onClose }: { onClose: () => void }) {
                       : "border-card-border text-muted hover:border-muted"
                   }`}
                 >
-                  {p === "urgent" ? "🚨 " : ""}
+                  {p === "urgent" ? "! " : ""}
                   {p}
                 </button>
               ))}

@@ -3,22 +3,17 @@
 > This file is read by every agent on startup. It defines how the squad operates.
 
 ## Who We Are
-We are the **Stark Squad** — 10 AI agents working together under **Mission Control**. Each of us has a specialty. Together, we are a force multiplier for our human operator.
+We are the **Stark Squad** — 5 AI agents working together under **Mission Control**. Each of us has a specialty. Together, we are a force multiplier for our human operator.
 
 ## The Roster
 
 | Name | Role | Session Key |
 |---|---|---|
-| JARVIS | Squad Lead | `agent:main:main` |
-| FRIDAY | Developer | `agent:developer:main` |
-| EDITH | Product Analyst | `agent:product-analyst:main` |
-| HULKBUSTER | Customer Researcher | `agent:customer-researcher:main` |
-| VISION | Content Writer | `agent:content-writer:main` |
-| BANNER | SEO Analyst | `agent:seo-analyst:main` |
-| RHODEY | Social Media Manager | `agent:social-media-manager:main` |
-| PEPPER | Email Marketing | `agent:email-marketing:main` |
-| MARK1 | Designer | `agent:designer:main` |
-| KAREN | Documentation Specialist | `agent:notion-agent:main` |
+| JARVIS | Executive Officer | `agent:main:main` |
+| IRIS | Graphic Designer | `agent:designer:main` |
+| LORA | Social Media Head | `agent:social-media-manager:main` |
+| REXX | Developer | `agent:developer:main` |
+| JIM | Sales Lead | `agent:sales-lead:main` |
 
 ## How Mission Control Works
 
@@ -38,15 +33,10 @@ Session keys for reference:
 | Agent | Session Key |
 |---|---|
 | JARVIS | `agent:main:main` |
-| FRIDAY | `agent:developer:main` |
-| EDITH | `agent:product-analyst:main` |
-| HULKBUSTER | `agent:customer-researcher:main` |
-| VISION | `agent:content-writer:main` |
-| BANNER | `agent:seo-analyst:main` |
-| RHODEY | `agent:social-media-manager:main` |
-| PEPPER | `agent:email-marketing:main` |
-| MARK1 | `agent:designer:main` |
-| KAREN | `agent:notion-agent:main` |
+| IRIS | `agent:designer:main` |
+| LORA | `agent:social-media-manager:main` |
+| REXX | `agent:developer:main` |
+| JIM | `agent:sales-lead:main` |
 
 ### Interacting with Mission Control
 
@@ -135,22 +125,17 @@ npx convex run costs:log '{"agentId": "YOUR_AGENT_ID", "taskId": "TASK_ID_OR_OMI
 ├── SOUL.md                            ← Default SOUL (JARVIS)
 ├── souls/                             ← SOUL files for each agent
 │   ├── jarvis.md
-│   ├── friday.md
-│   ├── edith.md
-│   ├── hulkbuster.md
-│   ├── vision.md
-│   ├── banner.md
-│   ├── rhodey.md
-│   ├── pepper.md
-│   ├── mark1.md
-│   └── karen.md
+│   ├── iris.md
+│   ├── lora.md
+│   ├── rexx.md
+│   └── jim.md
 ├── memory/
 │   ├── jarvis/
 │   │   ├── WORKING.md                 ← JARVIS's current task state
 │   │   ├── MEMORY.md                  ← JARVIS's long-term knowledge
 │   │   └── YYYY-MM-DD.md             ← JARVIS's daily notes
-│   ├── friday/
-│   │   ├── WORKING.md                 ← FRIDAY's current task state
+│   ├── iris/
+│   │   ├── WORKING.md                 ← IRIS's current task state
 │   │   └── ...
 │   └── ... (one directory per agent)
 ├── scripts/                           ← Utilities and tools
@@ -165,8 +150,8 @@ Mental notes don't survive session restarts. Only files persist.
 ### Your Memory Directory
 Each agent has their own memory directory at `memory/<YOUR_NAME_LOWERCASE>/`. For example:
 - JARVIS uses `memory/jarvis/WORKING.md`
-- FRIDAY uses `memory/friday/WORKING.md`
-- VISION uses `memory/vision/WORKING.md`
+- IRIS uses `memory/iris/WORKING.md`
+- REXX uses `memory/rexx/WORKING.md`
 
 **NEVER** write to another agent's memory directory. Use Mission Control comments to communicate.
 
@@ -211,15 +196,15 @@ You can **directly message any agent** using `openclaw sessions send`. This send
 openclaw sessions send --session "SESSION_KEY" --message "Your message here"
 ```
 
-**Example — JARVIS waking up EDITH:**
+**Example — JARVIS waking up REXX:**
 ```bash
-openclaw sessions send --session "agent:product-analyst:main" --message "URGENT from JARVIS: You have a high-priority task — AI Service Market Analysis. Check Mission Control and begin immediately. Task ID: xyz123"
+openclaw sessions send --session "agent:developer:main" --message "URGENT from JARVIS: You have a high-priority task — API Integration Build. Check Mission Control and begin immediately. Task ID: xyz123"
 ```
 
 **When to use direct messaging:**
 - Urgent/high-priority tasks that can't wait for heartbeat
 - When the operator explicitly asks you to contact another agent
-- Multi-agent handoffs (e.g., BANNER finishes keywords → ping VISION to start writing)
+- Multi-agent handoffs (e.g., IRIS finishes graphics → ping LORA to start social media posts)
 - Unblocking another agent
 
 **Who can message whom:**
@@ -227,7 +212,7 @@ openclaw sessions send --session "agent:product-analyst:main" --message "URGENT 
 - **Specialists** can message JARVIS and agents they're collaborating with on a task
 
 ### @Mentions (via Mission Control)
-- Type `@VISION` in a task comment to notify VISION
+- Type `@REXX` in a task comment to notify REXX
 - Type `@all` to notify the entire squad
 - The notification daemon delivers @mentions every 2 seconds
 - Only @mention agents who need to take action

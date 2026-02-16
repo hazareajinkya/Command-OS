@@ -276,7 +276,7 @@ export default function TaskDetail({
                             >
                               <span className="flex items-center gap-1.5 text-foreground/80">
                                 <span className="text-sm">
-                                  {agent?.avatar ?? "🤖"}
+                                  {agent?.name?.slice(0, 1) ?? "?"}
                                 </span>
                                 {agent?.name ?? "Unknown"}
                               </span>
@@ -308,11 +308,11 @@ export default function TaskDetail({
                 documents.map((doc) => {
                   const isExpanded = expandedDocId === doc._id;
                   const typeIcons: Record<string, string> = {
-                    deliverable: "📦",
-                    research: "🔬",
-                    protocol: "📋",
-                    notes: "📝",
-                    draft: "✏️",
+                    deliverable: "D",
+                    research: "R",
+                    protocol: "P",
+                    notes: "N",
+                    draft: "Dr",
                   };
                   return (
                     <div
@@ -328,7 +328,7 @@ export default function TaskDetail({
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="text-sm flex-shrink-0">
-                            {typeIcons[doc.type] ?? "📄"}
+                            {typeIcons[doc.type] ?? "N"}
                           </span>
                           <div className="min-w-0">
                             <p className="text-xs font-semibold text-foreground truncate">
@@ -378,7 +378,7 @@ export default function TaskDetail({
               {messages.map((msg) => (
                 <div key={msg._id} className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-surface flex items-center justify-center text-sm flex-shrink-0 border border-card-border">
-                    {msg.agentAvatar ?? "🤖"}
+                    {msg.agentName?.slice(0, 1) ?? "?"}
                   </div>
                   <div className="flex-1 min-w-0 bg-surface/30 rounded-lg p-3 border border-card-border/50">
                     <div className="flex items-center gap-2 mb-1">

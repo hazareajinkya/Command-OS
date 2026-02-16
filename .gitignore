@@ -31,10 +31,9 @@ next-env.d.ts
 # Vercel
 .vercel
 
-# Large media files
-*.mp4
-*.mov
-*.avi
+# Large media / source files
+mission-control/Images/
+mission-control/Video/
 
 # Convex generated (will be regenerated)
 convex/_generated/

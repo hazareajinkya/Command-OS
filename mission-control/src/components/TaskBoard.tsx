@@ -88,30 +88,30 @@ export default function TaskBoard({
   return (
     <div className="flex-1 min-w-0">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-          <h2 className="text-xs font-semibold text-foreground tracking-tight">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-success animate-pulse" />
+          <h2 className="text-sm font-semibold text-foreground tracking-tight">
             MISSION QUEUE
           </h2>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-muted font-mono bg-surface px-1.5 py-0.5 rounded">
-            🎯 {statusCounts.in_progress ?? 0}
+          <span className="text-xs text-muted font-mono bg-surface px-2 py-1 rounded">
+            {statusCounts.in_progress ?? 0} active
           </span>
-          <span className="text-[10px] text-muted font-mono bg-surface px-1.5 py-0.5 rounded">
-            {tasks.length} active
+          <span className="text-xs text-muted font-mono bg-surface px-2 py-1 rounded">
+            {tasks.length} total
           </span>
         </div>
       </div>
 
       {/* Status Filter Pills */}
-      <div className="flex flex-wrap gap-1 mb-4">
+      <div className="flex flex-wrap gap-1.5 mb-5">
         {statusFilters.map((f) => (
           <button
             key={f.key}
             onClick={() => setStatusFilter(f.key)}
-            className={`text-[10px] px-2.5 py-1 rounded-full border transition-colors ${
+            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
               statusFilter === f.key
                 ? "border-accent bg-accent/10 text-accent font-semibold"
                 : "border-card-border text-muted hover:border-muted"
@@ -124,7 +124,7 @@ export default function TaskBoard({
       </div>
 
       {/* Kanban Columns */}
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-5 gap-4">
         {columns
           .filter(
             (col) =>
@@ -133,47 +133,47 @@ export default function TaskBoard({
           .map((col) => (
             <div
               key={col.key}
-              className={`bg-surface/30 border-t-2 ${col.color} rounded-xl p-3 min-h-[400px]`}
+              className={`bg-surface/30 border-t-2 ${col.color} rounded-xl p-3.5 min-h-[450px]`}
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => dragging && handleDrop(dragging, col.key)}
             >
               {/* Column Header */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-1.5">
-                  <span className={`w-2 h-2 rounded-full ${col.dot}`} />
-                  <h3 className="text-[10px] font-bold text-foreground/70 tracking-wider">
+                  <span className={`w-2.5 h-2.5 rounded-full ${col.dot}`} />
+                  <h3 className="text-xs font-bold text-foreground/70 tracking-wider">
                     {col.label}
                   </h3>
                 </div>
-                <span className="text-[10px] text-muted font-mono bg-card-bg px-1.5 py-0.5 rounded">
+                <span className="text-xs text-muted font-mono bg-card-bg px-2 py-0.5 rounded">
                   {tasksByStatus(col.key).length}
                 </span>
               </div>
 
               {/* Task Cards */}
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {tasksByStatus(col.key).map((task) => (
                   <div
                     key={task._id}
                     draggable
                     onDragStart={() => setDragging(task._id)}
                     onClick={() => onSelectTask(task._id)}
-                    className="bg-card-bg border border-card-border rounded-lg p-3 cursor-pointer hover:border-accent/30 transition-all group"
+                    className="bg-card-bg border border-card-border rounded-lg p-3.5 cursor-pointer hover:border-accent/30 hover:shadow-sm transition-all group"
                   >
                     {/* Priority indicator */}
                     {task.priority === "urgent" && (
                       <div className="flex items-center gap-1 mb-1.5">
-                        <span className="text-[9px] text-danger font-mono">
-                          🚨
+                        <span className="text-[9px] text-danger font-bold uppercase tracking-wider bg-danger/10 px-1.5 py-0.5 rounded">
+                          Urgent
                         </span>
                       </div>
                     )}
 
-                    <h4 className="text-xs font-medium text-foreground group-hover:text-accent transition-colors leading-tight mb-1.5">
+                    <h4 className="text-sm font-medium text-foreground group-hover:text-accent transition-colors leading-tight mb-1.5">
                       {task.title}
                     </h4>
 
-                    <p className="text-[10px] text-muted line-clamp-2 mb-2">
+                    <p className="text-xs text-muted line-clamp-2 mb-2">
                       {task.description}
                     </p>
 
@@ -187,8 +187,8 @@ export default function TaskBoard({
                               key={id}
                               className="text-[9px] text-muted flex items-center gap-0.5"
                             >
-                              <span className="w-4 h-4 rounded-full bg-surface flex items-center justify-center text-[8px]">
-                                {agent?.avatar ?? "🤖"}
+                              <span className="w-4 h-4 rounded-full bg-accent/10 flex items-center justify-center text-[7px] font-bold text-accent">
+                                {agent?.name?.slice(0, 1) ?? "?"}
                               </span>
                               {agent?.name}
                             </span>

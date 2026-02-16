@@ -33,6 +33,8 @@ scp -i "$EC2_KEY" ./memory/*.md "$EC2_HOST:$REMOTE_DIR/memory/"
 echo "⚙️  Uploading scripts..."
 scp -i "$EC2_KEY" ./scripts/notify-daemon.js "$EC2_HOST:$REMOTE_DIR/scripts/"
 scp -i "$EC2_KEY" ./scripts/setup-heartbeats.sh "$EC2_HOST:$REMOTE_DIR/scripts/"
+scp -i "$EC2_KEY" ./scripts/heartbeat-wrapper.sh "$EC2_HOST:$REMOTE_DIR/scripts/"
+scp -i "$EC2_KEY" ./scripts/check-paused.js "$EC2_HOST:$REMOTE_DIR/scripts/"
 
 # Make scripts executable
 ssh -i "$EC2_KEY" "$EC2_HOST" "chmod +x $REMOTE_DIR/scripts/*.sh"

@@ -142,7 +142,7 @@ export default function LiveFeed() {
                     : "border-card-border text-muted hover:border-muted"
                 }`}
               >
-                {agent.avatar} {agent.name}{" "}
+                {agent.name}{" "}
                 <span className="opacity-60">
                   {agentCounts[agent.name] ?? 0}
                 </span>
@@ -165,8 +165,8 @@ export default function LiveFeed() {
                 className="px-4 py-2.5 hover:bg-surface/30 transition-colors"
               >
                 <div className="flex items-start gap-2.5">
-                  <div className="w-6 h-6 rounded-full bg-surface flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
-                    {activity.agentAvatar ?? "📌"}
+                  <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-[8px] font-bold text-accent flex-shrink-0 mt-0.5">
+                    {activity.agentName?.slice(0, 1) ?? "S"}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] text-foreground/90 leading-relaxed">

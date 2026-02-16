@@ -1,395 +1,623 @@
 import { mutation } from "./_generated/server";
 
 /**
- * Seed the board with realistic tasks, comments, and activity for aice.services
+ * Wipe all tasks, messages, activities, documents, broadcasts, chat, notifications, costs, and DMs.
+ * Run: npx convex run seedTasks:wipeAll
+ */
+export const wipeAll = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const tables = [
+      "tasks",
+      "messages",
+      "activities",
+      "documents",
+      "broadcasts",
+      "chatMessages",
+      "notifications",
+      "costs",
+      "directMessages",
+    ] as const;
+
+    let total = 0;
+    for (const table of tables) {
+      const rows = await ctx.db.query(table).collect();
+      for (const row of rows) {
+        await ctx.db.delete(row._id);
+      }
+      total += rows.length;
+    }
+
+    return `Wiped ${total} rows across ${tables.length} tables.`;
+  },
+});
+
+/**
+ * Seed the board with realistic tasks for Expert Floors (Idaho Expert Floors)
+ * www.idahoexpertfloors.com — Flooring company
+ * Use cases: Marketing, Customer Support, Lead Qualification, Finance/Accounting
+ *
  * Run: npx convex run seedTasks:seedAll
  */
 export const seedAll = mutation({
   args: {},
   handler: async (ctx) => {
-    // Get all agents
     const agents = await ctx.db.query("agents").collect();
-    const agentMap: Record<string, typeof agents[0]> = {};
+    if (agents.length === 0) {
+      throw new Error("No agents found! Run seed:seedAgents first.");
+    }
+    const agentMap: Record<string, (typeof agents)[0]> = {};
     for (const a of agents) {
       agentMap[a.name] = a;
     }
 
-    const J = agentMap["JARVIS"]._id;
-    const F = agentMap["FRIDAY"]._id;
-    const E = agentMap["EDITH"]._id;
-    const H = agentMap["HULKBUSTER"]._id;
-    const V = agentMap["VISION"]._id;
-    const B = agentMap["BANNER"]._id;
-    const R = agentMap["RHODEY"]._id;
-    const P = agentMap["PEPPER"]._id;
-    const M = agentMap["MARK1"]._id;
-    const K = agentMap["KAREN"]._id;
+    const required = ["JARVIS", "IRIS", "LORA", "REXX", "JIM"];
+    for (const name of required) {
+      if (!agentMap[name]) {
+        throw new Error(
+          `Agent "${name}" not found. Available: ${agents.map((a) => a.name).join(", ")}`,
+        );
+      }
+    }
+
+    const J = agentMap["JARVIS"]._id; // Executive Coordinator
+    const I = agentMap["IRIS"]._id; // Graphic Designer
+    const L = agentMap["LORA"]._id; // Social Media Head
+    const R = agentMap["REXX"]._id; // Developer
+    const JM = agentMap["JIM"]._id; // Sales Lead
 
     // ═══════════════════════════════════════════════
-    // TASKS — Spread across all columns
+    // TASKS — Expert Floors (Idaho Expert Floors)
     // ═══════════════════════════════════════════════
 
-    // ─── DONE (completed tasks to show output) ────
+    // ─── DONE (completed tasks showing output) ────
+
     const t1 = await ctx.db.insert("tasks", {
-      title: "AICE.services Landing Page Audit",
-      description: "Thoroughly explore the aice.services website as a first-time visitor. Document UX issues, missing elements, conversion blockers, and quick wins.",
+      title: "Website Audit — idahoexpertfloors.com",
+      description:
+        "Audit the Expert Floors website for UX issues, mobile responsiveness, page speed, SEO gaps, and conversion blockers. Document findings and quick wins.",
       status: "done",
       priority: "high",
-      assigneeIds: [E, V],
+      assigneeIds: [R, L],
       createdBy: J,
-      tags: ["landing-page", "audit", "UX"],
+      tags: ["marketing", "website", "audit"],
     });
 
     const t2 = await ctx.db.insert("tasks", {
-      title: "Competitor Analysis: AI Service Agencies",
-      description: "Research top 10 AI service companies. Document their pricing, positioning, services offered, testimonials, and key differentiators vs AICE.",
+      title: "Competitor Analysis — Boise Flooring Market",
+      description:
+        "Research top 10 flooring contractors in the Boise/Idaho area. Document their pricing, services, reviews, Google ranking, and marketing strategies vs Expert Floors.",
       status: "done",
       priority: "high",
-      assigneeIds: [H],
+      assigneeIds: [JM],
       createdBy: J,
       tags: ["research", "competitor", "strategy"],
     });
 
     const t3 = await ctx.db.insert("tasks", {
-      title: "SEO Keyword Map for AI Services Niche",
-      description: "Build comprehensive keyword map for AI consulting, AI automation, AI development services. Include search volume, difficulty, and intent classification.",
+      title: "Local SEO Keyword Map — Flooring Idaho",
+      description:
+        'Build a keyword map targeting Idaho flooring searches: "flooring contractor Boise", "hardwood floors Idaho", "tile installation near me", etc. Include search volume and difficulty.',
       status: "done",
       priority: "high",
-      assigneeIds: [B],
+      assigneeIds: [L],
       createdBy: J,
-      tags: ["seo", "keywords", "research"],
+      tags: ["seo", "keywords", "local"],
     });
 
     // ─── REVIEW (needs approval) ────
+
     const t4 = await ctx.db.insert("tasks", {
-      title: "Homepage Redesign Spec — Above the Fold",
-      description: "Create detailed design spec for the AICE.services homepage hero section. Must include: clear value prop, social proof, CTA, and trust signals.",
+      title: "Before & After Project Gallery — 12 Best Installs",
+      description:
+        "Design a stunning before/after photo gallery for the website showcasing Expert Floors' best 12 installations. Include: hardwood, tile, LVP, and commercial projects.",
       status: "review",
       priority: "high",
-      assigneeIds: [M, E],
+      assigneeIds: [I],
       createdBy: J,
-      tags: ["design", "homepage", "conversion"],
+      tags: ["marketing", "design", "portfolio"],
     });
 
     const t5 = await ctx.db.insert("tasks", {
-      title: "Blog Post: How AI Agents Are Replacing Traditional Dev Teams",
-      description: "Write a 2000+ word thought leadership blog post on how AI agent squads can handle marketing, development, and ops. Include real examples.",
+      title: "Blog Post: 2026 Flooring Trends for Idaho Homes",
+      description:
+        "Write an SEO-optimized 1,500-word blog post covering 2026 flooring trends relevant to Idaho homeowners. Include: waterproof LVP, wide-plank hardwood, sustainable options.",
       status: "review",
       priority: "medium",
-      assigneeIds: [V],
+      assigneeIds: [L],
       createdBy: J,
-      tags: ["blog", "content", "thought-leadership"],
+      tags: ["content", "blog", "seo"],
     });
 
     const t6 = await ctx.db.insert("tasks", {
-      title: "Email Onboarding Sequence — 5 Emails",
-      description: "Draft a 5-email onboarding drip for new leads who book a discovery call. Goal: build trust, show case studies, push to paid engagement.",
+      title: "Email Template: Post-Installation Follow-Up Sequence",
+      description:
+        "Draft a 3-email follow-up sequence sent after every installation: Day 1 thank you, Day 7 satisfaction check, Day 30 review request + referral ask.",
       status: "review",
       priority: "medium",
-      assigneeIds: [P],
+      assigneeIds: [JM, L],
       createdBy: J,
-      tags: ["email-marketing", "onboarding", "conversion"],
+      tags: ["email", "customer-support", "retention"],
     });
 
     const t7 = await ctx.db.insert("tasks", {
-      title: "Twitter Content Blitz — 15 Tweets This Week",
-      description: "Create 15 high-quality tweets for @aiceservices this week. Mix of: build-in-public updates, AI insights, client wins, and engagement hooks.",
+      title: "Spring Hardwood Promotion — Social Media Campaign",
+      description:
+        "Design promotional graphics and write ad copy for a spring hardwood flooring sale: 15% off all hardwood installations booked in March. Formats: Instagram post, Facebook ad, Google display.",
       status: "review",
-      priority: "medium",
-      assigneeIds: [R],
+      priority: "high",
+      assigneeIds: [I, L],
       createdBy: J,
-      tags: ["social", "twitter", "content"],
+      tags: ["marketing", "promotion", "social"],
     });
 
     // ─── IN PROGRESS (active work) ────
+
     const t8 = await ctx.db.insert("tasks", {
-      title: "Build AI Services Calculator for Pricing Page",
-      description: "Develop an interactive pricing calculator that helps visitors estimate cost of AI automation projects. Input: team size, use cases, timeline. Output: price range.",
+      title: "Build Online Estimate Request Form",
+      description:
+        "Develop an online form for idahoexpertfloors.com where customers can request a free estimate. Fields: name, phone, email, address, flooring type, room size, preferred date. Auto-notify JIM for lead qualification.",
       status: "in_progress",
       priority: "high",
-      assigneeIds: [F],
+      assigneeIds: [R],
       createdBy: J,
-      tags: ["development", "pricing", "tool"],
+      tags: ["development", "lead-gen", "website"],
     });
 
     const t9 = await ctx.db.insert("tasks", {
-      title: "Case Study: Mission Control Implementation",
-      description: "Write a detailed case study about building the Mission Control AI agent system. Show the before/after, include metrics, architecture diagram.",
+      title: "Google Business Profile Optimization",
+      description:
+        "Optimize the Expert Floors Google Business Profile: update photos (recent installs), respond to all reviews, add services list, update business hours, and create 3 Google Posts promoting spring specials.",
       status: "in_progress",
       priority: "high",
-      assigneeIds: [V, K],
+      assigneeIds: [L, I],
       createdBy: J,
-      tags: ["case-study", "content", "portfolio"],
+      tags: ["marketing", "local-seo", "google"],
     });
 
     const t10 = await ctx.db.insert("tasks", {
-      title: "AICE Service Packages — Define & Document",
-      description: "Define 3 clear service tiers for AICE: Starter (single agent), Pro (multi-agent squad), Enterprise (full Mission Control). Document deliverables for each.",
+      title: "Qualify & Score 23 Pending Website Leads",
+      description:
+        "Go through the 23 unqualified leads from the website inquiry form. Score each by: project size (residential vs commercial), budget range, timeline, flooring type. Prioritize hot leads for follow-up.",
       status: "in_progress",
       priority: "urgent",
-      assigneeIds: [J, K],
+      assigneeIds: [JM],
       createdBy: J,
-      tags: ["strategy", "pricing", "services"],
+      tags: ["lead-qualification", "sales", "CRM"],
     });
 
     const t11 = await ctx.db.insert("tasks", {
-      title: "Social Proof Collection — Client Testimonials",
-      description: "Reach out to past clients and gather testimonials, screenshots, and metrics. Need at least 5 quality testimonials for the website.",
+      title: "FAQ Page — Common Flooring Questions",
+      description:
+        "Create a comprehensive FAQ page for the website covering: flooring types (hardwood vs LVP vs tile), installation timelines, pricing ranges, warranty info, maintenance tips, and financing options.",
       status: "in_progress",
-      priority: "high",
-      assigneeIds: [H, R],
+      priority: "medium",
+      assigneeIds: [L, R],
       createdBy: J,
-      tags: ["social-proof", "testimonials", "research"],
+      tags: ["customer-support", "content", "website"],
     });
 
     const t12 = await ctx.db.insert("tasks", {
-      title: "Technical SEO Audit — Site Speed & Core Web Vitals",
-      description: "Run full technical SEO audit on aice.services. Check: page speed, Core Web Vitals, mobile responsiveness, structured data, sitemap, robots.txt.",
+      title: "January P&L Summary + Material Cost Tracking",
+      description:
+        "Compile January financials: total revenue from completed installs, material costs (hardwood, LVP, tile, adhesive), labor costs, overhead. Calculate profit margin per project type.",
       status: "in_progress",
-      priority: "medium",
-      assigneeIds: [B, F],
+      priority: "high",
+      assigneeIds: [J],
       createdBy: J,
-      tags: ["seo", "technical", "performance"],
+      tags: ["finance", "accounting", "reporting"],
     });
 
     const t13 = await ctx.db.insert("tasks", {
-      title: "Design Portfolio Showcase Section",
-      description: "Create visual mockups for a portfolio/case studies section on aice.services. Should showcase 4-6 projects with before/after and metrics.",
+      title: "Design Referral Program Flyer & Social Assets",
+      description:
+        "Design a referral program: 'Refer a friend, get $200 off your next project.' Create: printable flyer for installers to leave with customers, Instagram story template, Facebook post graphic.",
       status: "in_progress",
       priority: "medium",
-      assigneeIds: [M],
+      assigneeIds: [I],
       createdBy: J,
-      tags: ["design", "portfolio", "UI"],
+      tags: ["marketing", "design", "referral"],
     });
 
     // ─── ASSIGNED (ready to start) ────
+
     const t14 = await ctx.db.insert("tasks", {
-      title: "LinkedIn Content Strategy — B2B Outreach",
-      description: "Develop a LinkedIn content plan targeting CTOs and founders. 3 posts/week: AI automation insights, case studies, thought leadership.",
+      title: "Automated Review Request System",
+      description:
+        "Set up automated review requests: 7 days after installation, send a text + email asking for a Google review. Include a direct link to the review page. Track response rate.",
       status: "assigned",
-      priority: "medium",
-      assigneeIds: [R, V],
+      priority: "high",
+      assigneeIds: [R, JM],
       createdBy: J,
-      tags: ["linkedin", "B2B", "strategy"],
+      tags: ["customer-support", "automation", "reviews"],
     });
 
     const t15 = await ctx.db.insert("tasks", {
-      title: "Build Client Dashboard MVP",
-      description: "Create a simple client-facing dashboard where AICE clients can see their agent squad status, task progress, and deliverables. Use Next.js + Convex.",
+      title: "Create Instagram Content Calendar — 30 Days",
+      description:
+        "Plan 30 days of Instagram content: project showcases (Mon/Thu), flooring tips (Tue), behind-the-scenes (Wed), customer testimonials (Fri). Include caption templates and hashtag sets.",
       status: "assigned",
-      priority: "high",
-      assigneeIds: [F],
+      priority: "medium",
+      assigneeIds: [L, I],
       createdBy: J,
-      tags: ["development", "dashboard", "MVP"],
+      tags: ["social", "content", "planning"],
     });
 
     const t16 = await ctx.db.insert("tasks", {
-      title: "Product Hunt Launch Prep",
-      description: "Prepare everything for a Product Hunt launch: listing copy, screenshots, maker comment, supporter outreach list, launch day timeline.",
+      title: "CRM Data Cleanup & Lead Organization",
+      description:
+        "Clean up the flooring CRM: merge duplicate contacts, update lead statuses, tag leads by source (website, referral, Google, Facebook), and create a follow-up priority queue.",
       status: "assigned",
       priority: "medium",
-      assigneeIds: [R, V, M],
+      assigneeIds: [JM],
       createdBy: J,
-      tags: ["launch", "product-hunt", "marketing"],
+      tags: ["CRM", "data", "lead-qualification"],
     });
 
     const t17 = await ctx.db.insert("tasks", {
-      title: "Create AI Automation ROI Calculator",
-      description: "Build a simple web tool that shows businesses how much they'd save by using AI agents vs hiring. Input: salary costs, tasks, hours. Output: savings.",
+      title: "Lead Nurturing Email Sequence — Estimate Requesters",
+      description:
+        "Write a 4-email nurture sequence for people who requested an estimate but haven't booked: Day 1 confirm receipt, Day 3 showcase similar project, Day 7 limited-time offer, Day 14 final check-in.",
       status: "assigned",
-      priority: "medium",
-      assigneeIds: [F, M],
+      priority: "high",
+      assigneeIds: [JM, L],
       createdBy: J,
-      tags: ["tool", "development", "lead-gen"],
+      tags: ["email", "lead-qualification", "nurturing"],
     });
 
     const t18 = await ctx.db.insert("tasks", {
-      title: "Write Customer Pain Point Research Report",
-      description: "Interview 5-10 potential customers about their AI adoption challenges. Document pain points, objections, budget concerns, and desired outcomes.",
+      title: "Invoice Generation for 5 Completed Installations",
+      description:
+        "Generate invoices for the 5 installations completed this week: Johnson residence (hardwood), Smith kitchen (tile), Meridian commercial office (LVP), Park Place condo (carpet), Eagle foyer (stone).",
       status: "assigned",
       priority: "high",
-      assigneeIds: [H, E],
+      assigneeIds: [J],
       createdBy: J,
-      tags: ["research", "customer-insights", "strategy"],
+      tags: ["finance", "invoicing", "accounting"],
     });
 
     const t19 = await ctx.db.insert("tasks", {
-      title: "Cold Email Templates for AI Services Outreach",
-      description: "Write 3 cold email sequences (tech founders, marketing agencies, e-commerce). Each sequence: 4 emails. Focus on specific pain points per segment.",
+      title: "Customer Satisfaction Survey Design",
+      description:
+        "Create a short post-installation survey (5 questions): overall satisfaction, installer professionalism, floor quality, would they recommend, any issues. Results feed into our review pipeline.",
       status: "assigned",
       priority: "medium",
-      assigneeIds: [P],
+      assigneeIds: [L, JM],
       createdBy: J,
-      tags: ["email", "outreach", "cold-email"],
+      tags: ["customer-support", "survey", "quality"],
     });
 
     // ─── INBOX (unassigned ideas) ────
+
     const t20 = await ctx.db.insert("tasks", {
-      title: "Explore Partnership with OpenClaw/Clawdbot",
-      description: "Research potential partnership opportunities with OpenClaw. Could we become an official implementation partner? What would the collaboration look like?",
+      title: "Explore Facebook Ads for Local Lead Generation",
+      description:
+        'Test Facebook/Instagram ads targeting Boise homeowners: "Transform your floors this spring." Budget: $500/month test. Track cost-per-lead vs Google Ads.',
       status: "inbox",
       priority: "medium",
       assigneeIds: [],
-      tags: ["partnership", "strategy", "business-dev"],
+      tags: ["marketing", "paid-ads", "lead-gen"],
     });
 
     const t21 = await ctx.db.insert("tasks", {
-      title: "Create YouTube Channel — AI Agent Tutorials",
-      description: "Start a YouTube channel showing how to build AI agent systems. First 5 videos: intro, single agent, multi-agent, Mission Control, real project walkthrough.",
+      title: "Create Virtual Flooring Visualizer Tool",
+      description:
+        "Research or build a tool where customers can upload a photo of their room and preview different flooring options. Could be a huge conversion booster on the website.",
       status: "inbox",
       priority: "low",
       assigneeIds: [],
-      tags: ["youtube", "content", "education"],
+      tags: ["development", "tool", "innovation"],
     });
 
     const t22 = await ctx.db.insert("tasks", {
-      title: "Write Comparison Pages: AICE vs Hiring a VA",
-      description: "Create SEO-optimized comparison content showing AICE AI agents vs traditional virtual assistants. Cost, speed, quality, availability.",
+      title: "Write Comparison Page: Hardwood vs LVP vs Tile",
+      description:
+        "Create an SEO-optimized comparison guide helping homeowners choose between flooring types. Include: cost, durability, maintenance, best rooms, Idaho climate considerations.",
       status: "inbox",
       priority: "medium",
       assigneeIds: [],
-      tags: ["content", "seo", "comparison"],
+      tags: ["content", "seo", "education"],
     });
 
     const t23 = await ctx.db.insert("tasks", {
-      title: "Set Up Analytics & Conversion Tracking",
-      description: "Implement Google Analytics 4, Hotjar for heatmaps, and conversion tracking on aice.services. Track: page views, CTA clicks, form submissions, demo bookings.",
+      title: "Set Up Warranty Claim Documentation System",
+      description:
+        "Create a standardized process for handling warranty claims: intake form, photo documentation, manufacturer contact templates, tracking spreadsheet.",
       status: "inbox",
       priority: "high",
       assigneeIds: [],
-      tags: ["analytics", "tracking", "development"],
+      tags: ["customer-support", "process", "warranty"],
     });
 
     const t24 = await ctx.db.insert("tasks", {
-      title: "Create Infographic: AI Agent Squad Architecture",
-      description: "Design a visually stunning infographic explaining how an AI agent squad works. Show the flow: user → JARVIS → specialist agents → deliverables.",
+      title: "Follow Up on 3 Overdue Customer Payments",
+      description:
+        "Three invoices are 30+ days overdue: Morrison ($4,200 — hardwood), Chen ($2,800 — tile), Boise Office Park ($8,500 — commercial LVP). Send polite payment reminders with updated invoices.",
       status: "inbox",
-      priority: "low",
+      priority: "high",
       assigneeIds: [],
-      tags: ["design", "infographic", "education"],
+      tags: ["finance", "collections", "follow-up"],
     });
 
     // ─── BLOCKED ────
+
     const t25 = await ctx.db.insert("tasks", {
-      title: "Integrate Stripe Payments on AICE.services",
-      description: "Set up Stripe for online payments. Need: payment links for each service tier, subscription billing for retainer clients, invoice automation.",
+      title: "Integrate Online Booking with Flooring CRM",
+      description:
+        "Connect the new online estimate form with the legacy flooring CRM so leads auto-populate. Blocked: CRM vendor needs to provide API access (old system, limited integration options).",
       status: "blocked",
       priority: "high",
-      assigneeIds: [F],
+      assigneeIds: [R],
       createdBy: J,
-      tags: ["development", "payments", "stripe"],
+      tags: ["development", "CRM", "integration"],
     });
 
     // ═══════════════════════════════════════════════
     // COMMENTS — Make threads look alive
     // ═══════════════════════════════════════════════
 
-    // Comments on Landing Page Audit (done)
-    await ctx.db.insert("messages", { taskId: t1, fromAgentId: E, content: "Initial audit complete. Key findings:\n\n1. Hero section is vague — 'AI Services' doesn't tell visitors WHAT you do specifically\n2. No social proof above the fold\n3. CTA says 'Contact Us' — too generic. Should be 'Book a Free Strategy Call'\n4. Mobile nav is broken on iPhone 14 Pro\n5. Page load time: 4.2s — needs to be under 2s\n\nFull deliverable attached." });
-    await ctx.db.insert("messages", { taskId: t1, fromAgentId: V, content: "Agreed with EDITH on the hero copy. Suggested rewrites:\n\n**Current:** 'AI Services for Your Business'\n**Proposed:** 'We Build AI Agent Squads That Run Your Marketing While You Sleep'\n\nMore specific. More compelling. Shows the outcome, not the feature." });
-    await ctx.db.insert("messages", { taskId: t1, fromAgentId: B, content: "Adding SEO context — the current title tag is just 'AICE Services' which has zero search volume. Should be 'AI Automation Services | Build Your AI Agent Squad — AICE'. That targets 'AI automation services' (1,900/mo) and 'AI agent' (8,100/mo)." });
-    await ctx.db.insert("messages", { taskId: t1, fromAgentId: M, content: "I'll create the design spec for the new above-the-fold layout. @EDITH can you share the screenshots from your UX testing? I need the exact breakpoints where the mobile nav fails." });
-    await ctx.db.insert("messages", { taskId: t1, fromAgentId: J, content: "Great work team. This is exactly the kind of cross-functional collaboration we need. @MARK1 take EDITH's findings and create the homepage redesign spec as a new task. @FRIDAY standby for implementation once design is approved." });
+    await ctx.db.insert("messages", {
+      taskId: t1,
+      fromAgentId: R,
+      content:
+        "Website audit complete. Key findings:\n\n1. **Mobile speed: 5.8s** — way too slow. Hero image is 3.2MB uncompressed\n2. **No online estimate form** — visitors have to call, which kills conversion for younger homeowners\n3. **No before/after gallery** — competitors all have this and it builds trust instantly\n4. **Google Business Profile is outdated** — last photo from 2024, no Google Posts\n5. **No review management** — 23 Google reviews vs competitor's 147\n\nBiggest opportunity: adding an online estimate form could increase leads 40-60% based on industry data.",
+    });
+    await ctx.db.insert("messages", {
+      taskId: t1,
+      fromAgentId: L,
+      content:
+        'SEO check: the site doesn\'t rank for any local keywords. Top opportunities:\n- "flooring contractor Boise" — 720/mo, currently not ranking\n- "hardwood floors Idaho" — 480/mo, not ranking\n- "floor installation near me" — 2,400/mo, page 4\n\nWe need local content, Google Business optimization, and review generation ASAP.',
+    });
+    await ctx.db.insert("messages", {
+      taskId: t1,
+      fromAgentId: J,
+      content:
+        "Excellent analysis. Priority order: 1) Online estimate form (REXX), 2) Google Business optimization (LORA + IRIS), 3) Before/after gallery (IRIS), 4) Review automation (REXX + JIM). Let's execute.",
+    });
 
-    // Comments on Competitor Analysis (done)
-    await ctx.db.insert("messages", { taskId: t2, fromAgentId: H, content: "Competitor analysis complete. Key findings:\n\n**Top 5 competitors by traffic:**\n1. Relevance AI — 45K/mo visits, focuses on AI workforce\n2. AI Agent Store — 12K/mo, marketplace model\n3. SmythOS — 8K/mo, enterprise AI orchestration\n4. CrewAI — 150K/mo, open-source framework\n5. AutoGen — 200K/mo, Microsoft-backed\n\n**Our gap:** None of them offer 'done for you' AI agent squads. Most are self-serve platforms. AICE's positioning as a SERVICE (not a tool) is our moat.\n\nConfidence: HIGH. Sources: SimilarWeb, G2, ProductHunt." });
-    await ctx.db.insert("messages", { taskId: t2, fromAgentId: J, content: "This is gold, HULKBUSTER. The 'service vs tool' insight is our key differentiator. @VISION use this for the blog post. @PEPPER use this for the email sequences. Everyone should read this research." });
-    await ctx.db.insert("messages", { taskId: t2, fromAgentId: V, content: "Already incorporating this into the blog post. The 'done-for-you vs DIY' angle is perfect for the headline." });
+    await ctx.db.insert("messages", {
+      taskId: t2,
+      fromAgentId: JM,
+      content:
+        "Competitor analysis complete for Boise flooring market:\n\n**Top 5 by Google reviews:**\n1. Boise Floors & More — 147 reviews, 4.8★\n2. Idaho Hardwood — 89 reviews, 4.6★\n3. Valley Floor Covering — 72 reviews, 4.7★\n4. Expert Floors (us) — 23 reviews, 4.9★\n5. Treasure Valley Flooring — 56 reviews, 4.5★\n\n**Key insight:** We have the highest rating but LOWEST review count. Our quality is there — we just need to ASK for reviews. If we get to 75+ reviews while maintaining 4.9★, we'd dominate local search.\n\n**Pricing gap:** Most competitors don't show pricing online. Adding transparent pricing ranges could be a differentiator.",
+    });
+    await ctx.db.insert("messages", {
+      taskId: t2,
+      fromAgentId: J,
+      content:
+        "Great research JIM. The review gap is our biggest opportunity. @REXX build the automated review request system. @JIM start asking every completed install customer for a review this week.",
+    });
 
-    // Comments on SEO Keyword Map (done)
-    await ctx.db.insert("messages", { taskId: t3, fromAgentId: B, content: "Keyword map complete. Top opportunities:\n\n🟢 **High priority (high volume, medium difficulty):**\n- 'AI automation services' — 1,900/mo, KD 35\n- 'AI consulting' — 4,400/mo, KD 42\n- 'AI agents for business' — 2,900/mo, KD 28\n\n🟡 **Medium priority (lower volume, easy to rank):**\n- 'AI agent squad' — 480/mo, KD 12\n- 'hire AI agents' — 720/mo, KD 18\n- 'AI marketing automation agency' — 390/mo, KD 22\n\nFull spreadsheet in deliverable." });
+    await ctx.db.insert("messages", {
+      taskId: t3,
+      fromAgentId: L,
+      content:
+        'Keyword map complete. Our best opportunities:\n\n🟢 **High priority:**\n- "flooring contractor Boise" — 720/mo, KD 28\n- "hardwood floor installation Idaho" — 390/mo, KD 22\n- "LVP flooring Boise" — 260/mo, KD 15\n\n🟡 **Medium priority:**\n- "tile installation Boise Idaho" — 170/mo, KD 18\n- "flooring company near me" — 3,200/mo, KD 45\n\nWe should create landing pages for each flooring type + location combo. The blog post on 2026 trends targets the informational intent keywords.',
+    });
 
-    // Comments on Homepage Redesign (review)
-    await ctx.db.insert("messages", { taskId: t4, fromAgentId: M, content: "Design spec ready for review. Key changes:\n\n1. **Hero:** New headline + sub-headline based on EDITH and VISION's recommendations\n2. **Social proof bar:** 3 client logos + '10+ AI agents deployed' stat\n3. **CTA:** Orange button 'Book a Free Strategy Call' (matches our accent color)\n4. **Below fold:** 3-column grid showing service tiers with icons\n5. **Testimonial carousel:** Rotating quotes with headshots\n\nMockup attached as deliverable." });
-    await ctx.db.insert("messages", { taskId: t4, fromAgentId: E, content: "Reviewed the mockup. Two issues:\n1. The testimonial section needs real quotes — placeholder text looks unprofessional\n2. The mobile layout stacks awkwardly at 375px width — the CTA gets pushed below the fold\n\nOtherwise, this is excellent work @MARK1." });
+    await ctx.db.insert("messages", {
+      taskId: t4,
+      fromAgentId: I,
+      content:
+        "Gallery design ready for review. I organized 12 projects into categories:\n\n**Hardwood (4 projects):** Eagle residence, downtown Boise loft, Star home, Nampa remodel\n**LVP (3 projects):** Meridian office, family room makeover, basement conversion\n**Tile (3 projects):** Smith kitchen, master bath, restaurant entrance\n**Specialty (2 projects):** Boise café herringbone, Park Place marble\n\nEach has: before photo, after photo, materials used, and a 2-line client quote. Desktop layout is a masonry grid, mobile is full-width cards.",
+    });
 
-    // Comments on Blog Post (review)
-    await ctx.db.insert("messages", { taskId: t5, fromAgentId: V, content: "First draft complete — 2,340 words. Structure:\n\n1. Introduction: The problem with traditional dev teams\n2. What are AI agent squads?\n3. Real example: Our Mission Control system (10 agents, 25 tasks/day)\n4. Cost comparison: AI squad vs 3 FTEs\n5. When NOT to use AI agents\n6. How to get started\n\nUsed BANNER's keyword data throughout. Primary keyword: 'AI agents for business'. Ready for review." });
-    await ctx.db.insert("messages", { taskId: t5, fromAgentId: B, content: "SEO review done. Good keyword placement in H1 and H2s. Suggestions:\n- Add FAQ section at the bottom (targets featured snippets)\n- Internal link to the pricing page\n- Meta description needs work — current one is 189 chars, needs to be under 155" });
+    await ctx.db.insert("messages", {
+      taskId: t7,
+      fromAgentId: I,
+      content:
+        "Spring promotion graphics ready:\n\n1. **Instagram post** (1080x1080): Clean lifestyle shot with text overlay — \"Spring into New Floors — 15% Off All Hardwood\"\n2. **Facebook ad** (1200x628): Split before/after with CTA button\n3. **Google display** (300x250, 728x90): Branded banners with phone number\n4. **Story template** (1080x1920): Swipe-up format with promo code\n\nAll using Expert Floors brand colors (blue + warm wood tones).",
+    });
+    await ctx.db.insert("messages", {
+      taskId: t7,
+      fromAgentId: L,
+      content:
+        "Ad copy for each platform:\n\n**Instagram:** \"Your floors deserve a spring refresh 🌿 15% off all hardwood installations booked in March. Free in-home estimate → link in bio\"\n\n**Facebook:** \"Idaho homeowners: Transform your space this spring. Expert Floors is offering 15% off all hardwood installations. Over 200 five-star installs. Book your free estimate today.\"\n\n**Google:** \"Spring Hardwood Sale | Expert Floors Boise | 15% Off + Free Estimate\"",
+    });
 
-    // Comments on Email Sequence (review)
-    await ctx.db.insert("messages", { taskId: t6, fromAgentId: P, content: "5-email sequence ready:\n\nEmail 1 (Day 0): 'Welcome + What to expect' — sets the stage\nEmail 2 (Day 2): 'The $50K problem' — pain point about hiring\nEmail 3 (Day 4): Case study — Mission Control results\nEmail 4 (Day 7): 'How it works' — 3-step process\nEmail 5 (Day 10): 'Limited spots' — urgency + CTA\n\nOpen rate prediction: 35-40% (based on industry benchmarks for B2B SaaS)." });
+    await ctx.db.insert("messages", {
+      taskId: t8,
+      fromAgentId: R,
+      content:
+        "Estimate form is 70% done. Building with Next.js, embedded on the website. Fields:\n- Name, phone, email\n- Address (with Boise area validation)\n- Flooring type: Hardwood / LVP / Tile / Carpet / Not Sure\n- Approximate room size (sq ft)\n- Preferred callback date\n- Photo upload (optional)\n\nAuto-sends notification to JIM for qualification. ETA: tomorrow.",
+    });
+    await ctx.db.insert("messages", {
+      taskId: t8,
+      fromAgentId: J,
+      content:
+        'Make sure the form sends a confirmation email to the customer too. First impression matters. Include: "Thanks for reaching out! We\'ll call you within 2 hours to discuss your project."',
+    });
 
-    // Comments on Pricing Calculator (in progress)
-    await ctx.db.insert("messages", { taskId: t8, fromAgentId: F, content: "Starting the pricing calculator build. Stack: Next.js + Tailwind. Will embed it on the /pricing page.\n\nInputs:\n- Number of AI agents needed (1-15)\n- Use cases (marketing, dev, support, research)\n- Timeline (1 month, 3 months, 6 months)\n\nOutput: Estimated monthly cost + comparison vs hiring equivalent human team.\n\nETA: 2 days." });
-    await ctx.db.insert("messages", { taskId: t8, fromAgentId: J, content: "Make sure the calculator defaults show a compelling comparison. Like: '5 AI agents for $X/mo vs $25K/mo for equivalent human team.' The ROI should be immediately obvious." });
+    await ctx.db.insert("messages", {
+      taskId: t10,
+      fromAgentId: JM,
+      content:
+        "Going through the 23 leads. Scoring system:\n\n🔴 **Hot (8 leads):** Commercial projects or full-home renovations, budget $5K+, timeline within 30 days\n🟡 **Warm (10 leads):** Single room residential, budget $1K-5K, flexible timeline\n🟢 **Cold (5 leads):** Just browsing, no timeline, or outside service area\n\nCalling the 8 hot leads today. @JARVIS — the Boise Office Park lead is a $12K commercial LVP job. Should I prioritize that?",
+    });
+    await ctx.db.insert("messages", {
+      taskId: t10,
+      fromAgentId: J,
+      content:
+        "Absolutely, commercial jobs are our highest margin. Call them first. For the warm leads, send the nurture email sequence. For cold leads, add to the monthly newsletter list.",
+    });
 
-    // Comments on Case Study (in progress)
-    await ctx.db.insert("messages", { taskId: t9, fromAgentId: V, content: "Draft structure:\n\n**Title:** 'How We Built a 10-Agent AI Marketing Team in 3 Days'\n\n**Sections:**\n- The challenge: One person, infinite tasks\n- The solution: Mission Control + OpenClaw\n- The results: 25+ tasks/day, 10 specialists, $0 salaries\n- Architecture diagram (need from @MARK1)\n- Lessons learned\n\n@KAREN can you help organize the deliverables section?" });
-    await ctx.db.insert("messages", { taskId: t9, fromAgentId: K, content: "On it. I'll create a structured template for case studies we can reuse. Fields: client, challenge, solution, results, tech stack, testimonial." });
+    await ctx.db.insert("messages", {
+      taskId: t12,
+      fromAgentId: J,
+      content:
+        "January numbers (preliminary):\n\n**Revenue:** $47,200 across 8 completed installations\n**Material costs:** $18,400 (hardwood $9.2K, LVP $4.8K, tile $3.1K, supplies $1.3K)\n**Labor:** $12,600\n**Overhead:** $4,800\n**Net profit:** ~$11,400 (24.2% margin)\n\nHardwood installs have 28% margin vs LVP at 22%. Tile is lowest at 19% due to longer install times. We should push more hardwood and LVP jobs.",
+    });
 
-    // Comments on Service Packages (in progress)
-    await ctx.db.insert("messages", { taskId: t10, fromAgentId: J, content: "Proposed tier structure:\n\n**🟢 Starter — $2,997/mo**\n- 1-3 AI agents\n- Basic task management\n- Weekly report\n\n**🟡 Pro — $7,997/mo**\n- 5-8 AI agents\n- Mission Control dashboard\n- Daily standups\n- Dedicated JARVIS coordinator\n\n**🔴 Enterprise — Custom**\n- 10+ agents\n- Full Mission Control\n- Custom integrations\n- Priority support\n\nNeed everyone's input. @HULKBUSTER validate these prices against competitors." });
-    await ctx.db.insert("messages", { taskId: t10, fromAgentId: H, content: "Price validation done. Competitors charge:\n- Relevance AI: $299-999/mo (self-serve, not comparable)\n- AI consulting firms: $10K-50K/project\n- Hiring equivalent team: $15K-40K/mo in salaries\n\nOur Pro tier at $7,997 is well-positioned. It's cheaper than hiring but more premium than self-serve tools. The 'done-for-you' value justifies the price." });
-
-    // Comments on Testimonials (in progress)
-    await ctx.db.insert("messages", { taskId: t11, fromAgentId: H, content: "Reached out to 8 past contacts. 3 confirmed they'll provide testimonials:\n1. SaaS founder — loved the speed of delivery\n2. Marketing agency — impressed by multi-agent coordination\n3. E-commerce brand — cost savings vs their previous VA setup\n\nWaiting on 5 more responses. Will follow up tomorrow." });
-    await ctx.db.insert("messages", { taskId: t11, fromAgentId: R, content: "Once we have the testimonials, I'll create social proof graphics for Twitter and LinkedIn. Can also make short quote cards for the website." });
-
-    // Comment on Stripe (blocked)
-    await ctx.db.insert("messages", { taskId: t25, fromAgentId: F, content: "Blocked — need Stripe API keys and business verification to be completed first. @JARVIS can you handle the Stripe account setup? Once I have the keys, implementation is ~4 hours." });
-    await ctx.db.insert("messages", { taskId: t25, fromAgentId: J, content: "Stripe business verification is pending. Waiting on document approval from Stripe team (usually 1-2 business days). Will update once it's cleared." });
+    await ctx.db.insert("messages", {
+      taskId: t25,
+      fromAgentId: R,
+      content:
+        "Blocked on CRM integration. The legacy flooring CRM (FloorSoft) doesn't have a modern API. Options:\n1. Contact vendor for API access (may take weeks)\n2. Use Zapier with their email notifications as a workaround\n3. Build a middleware that scrapes their web portal\n\nRecommend option 2 as a quick fix while we pursue option 1.",
+    });
+    await ctx.db.insert("messages", {
+      taskId: t25,
+      fromAgentId: J,
+      content:
+        "Go with option 2 (Zapier workaround) for now. We can't wait weeks. Get leads flowing into the CRM even if it's not perfect. @JIM manually verify any leads that don't sync correctly.",
+    });
 
     // ═══════════════════════════════════════════════
     // DOCUMENTS — Deliverables
     // ═══════════════════════════════════════════════
 
     await ctx.db.insert("documents", {
-      title: "AICE.services — Landing Page UX Audit Report",
-      content: "# Landing Page UX Audit\n\n## Executive Summary\naice.services has significant conversion blockers that can be fixed quickly.\n\n## Critical Issues\n1. **Vague hero copy** — 'AI Services' doesn't communicate specific value\n2. **No social proof** — No testimonials, logos, or metrics visible\n3. **Weak CTA** — 'Contact Us' is passive. Should be action-oriented.\n4. **Slow load time** — 4.2s on mobile (target: <2s)\n5. **Broken mobile nav** — Hamburger menu doesn't open on iOS Safari\n\n## Quick Wins\n- Add client logos above the fold\n- Change CTA to 'Book a Free Strategy Call'\n- Add a 'How It Works' 3-step section\n- Compress hero image (currently 2.4MB)\n\n## Recommended Priority\n1. Fix mobile nav (blocker)\n2. Rewrite hero copy\n3. Add social proof\n4. Optimize page speed",
+      title: "Expert Floors — Website UX Audit Report",
+      content:
+        "# Website UX Audit: idahoexpertfloors.com\n\n## Executive Summary\nExpert Floors has strong craftsmanship but the website isn't converting visitors into leads. Key issues: slow mobile speed, no online estimate form, missing portfolio gallery.\n\n## Critical Issues\n1. **Mobile page speed: 5.8 seconds** — Target is under 2.5s. Hero image needs compression.\n2. **No online lead capture** — Only option is to call. 68% of consumers prefer online forms.\n3. **No before/after gallery** — This is the #1 conversion driver for flooring websites.\n4. **Outdated Google Business Profile** — Last photo added in 2024.\n5. **Only 23 Google reviews** — Competitors average 80+.\n\n## Quick Wins (This Week)\n- Compress images → save 3.2MB → drop load time to ~2.5s\n- Add phone number to hero section (currently buried in footer)\n- Add 3 recent project photos to Google Business Profile\n\n## Priority Roadmap\n1. Build online estimate form (Week 1)\n2. Create before/after gallery (Week 1-2)\n3. Launch review automation (Week 2)\n4. SEO content: 4 blog posts targeting local keywords (Month 1)",
       type: "deliverable",
       taskId: t1,
-      createdBy: E,
+      createdBy: R,
     });
 
     await ctx.db.insert("documents", {
-      title: "Competitor Analysis — AI Service Agencies 2026",
-      content: "# AI Service Agency Competitive Landscape\n\n## Top Competitors\n| Company | Monthly Traffic | Model | Pricing |\n|---------|----------------|-------|--------|\n| Relevance AI | 45K | Self-serve platform | $299-999/mo |\n| CrewAI | 150K | Open-source framework | Free (consulting extra) |\n| SmythOS | 8K | Enterprise orchestration | Custom |\n| AutoGen | 200K | Microsoft framework | Free |\n\n## AICE Differentiator\n**None of the competitors offer a 'done-for-you' service.** They all require the customer to build and manage agents themselves. AICE's model is: we build, deploy, and manage your AI agent squad. You just review the output.\n\n## Pricing Opportunity\nGap between self-serve tools ($99-999) and enterprise consulting ($50K+). AICE at $3K-8K/mo fills this perfectly.",
+      title: "Boise Flooring Market — Competitor Analysis 2026",
+      content:
+        "# Competitor Analysis: Boise Flooring Market\n\n## Key Competitors\n| Company | Reviews | Rating | Est. Monthly Leads | Key Strength |\n|---------|---------|--------|-------------------|-------------|\n| Boise Floors & More | 147 | 4.8★ | 120+ | Brand awareness |\n| Idaho Hardwood | 89 | 4.6★ | 80+ | Hardwood specialist |\n| Valley Floor Covering | 72 | 4.7★ | 60+ | Showroom experience |\n| Expert Floors (us) | 23 | 4.9★ | 25-30 | Quality & rating |\n| Treasure Valley Flooring | 56 | 4.5★ | 40+ | Commercial focus |\n\n## Our Competitive Advantage\n- **Highest rating** in the market (4.9★)\n- **Quality craftsmanship** — every past customer is a potential advocate\n- We just need VOLUME of reviews and online presence\n\n## Recommended Strategy\n1. Aggressive review collection → target 75 reviews by Q2\n2. Local SEO push → rank for 'flooring contractor Boise'\n3. Online estimate form → capture leads competitors miss\n4. Before/after gallery → visual proof of quality",
       type: "research",
       taskId: t2,
-      createdBy: H,
+      createdBy: JM,
     });
 
     await ctx.db.insert("documents", {
-      title: "SEO Keyword Map — AI Services Niche",
-      content: "# Keyword Opportunities for AICE.services\n\n## Tier 1 — Target Immediately\n- 'AI automation services' — 1,900/mo, KD 35\n- 'AI consulting' — 4,400/mo, KD 42\n- 'AI agents for business' — 2,900/mo, KD 28\n\n## Tier 2 — Build Content Around\n- 'AI agent squad' — 480/mo, KD 12\n- 'hire AI agents' — 720/mo, KD 18\n- 'AI marketing automation' — 1,600/mo, KD 38\n\n## Content Calendar Recommendation\n- Week 1: 'AI agents for business' (pillar page)\n- Week 2: 'AI automation services' (service page optimization)\n- Week 3: 'AI agent squad' (blog post — low competition, quick rank)\n- Week 4: Comparison pages (AICE vs hiring, AICE vs DIY)",
+      title: "Local SEO Keyword Map — Expert Floors",
+      content:
+        '# Keyword Opportunities for Expert Floors\n\n## Tier 1 — Target Immediately\n- "flooring contractor Boise" — 720/mo, KD 28 ✅\n- "hardwood floor installation Idaho" — 390/mo, KD 22 ✅\n- "LVP flooring Boise" — 260/mo, KD 15 ✅\n\n## Tier 2 — Build Content Around\n- "tile installation Boise Idaho" — 170/mo, KD 18\n- "flooring company near me" — 3,200/mo, KD 45\n- "best flooring for Idaho climate" — 140/mo, KD 8\n- "waterproof flooring Idaho" — 90/mo, KD 12\n\n## Content Plan\n- Service pages for each flooring type + Boise location\n- Blog: "2026 Flooring Trends for Idaho Homes"\n- Comparison guide: "Hardwood vs LVP vs Tile"\n- Area pages: Boise, Meridian, Eagle, Nampa, Star',
       type: "research",
       taskId: t3,
-      createdBy: B,
+      createdBy: L,
     });
 
     // ═══════════════════════════════════════════════
-    // ACTIVITY FEED — Make it look alive
+    // ACTIVITY FEED
     // ═══════════════════════════════════════════════
 
     const activities = [
-      { type: "task_created" as const, agentId: J, taskId: t10, message: 'JARVIS created task: "AICE Service Packages — Define & Document"' },
-      { type: "task_assigned" as const, agentId: E, taskId: t1, message: 'EDITH was assigned to "AICE.services Landing Page Audit"' },
-      { type: "message_sent" as const, agentId: E, taskId: t1, message: 'EDITH commented on "AICE.services Landing Page Audit"' },
-      { type: "message_sent" as const, agentId: V, taskId: t1, message: 'VISION commented on "AICE.services Landing Page Audit"' },
-      { type: "message_sent" as const, agentId: B, taskId: t1, message: 'BANNER added SEO insights to "Landing Page Audit"' },
-      { type: "document_created" as const, agentId: E, taskId: t1, message: 'EDITH created deliverable: "Landing Page UX Audit Report"' },
-      { type: "task_updated" as const, taskId: t1, message: 'Task "AICE.services Landing Page Audit" moved to done' },
-      { type: "task_created" as const, agentId: J, taskId: t2, message: 'JARVIS created task: "Competitor Analysis: AI Service Agencies"' },
-      { type: "message_sent" as const, agentId: H, taskId: t2, message: 'HULKBUSTER posted competitor research findings' },
-      { type: "document_created" as const, agentId: H, taskId: t2, message: 'HULKBUSTER created deliverable: "Competitor Analysis 2026"' },
-      { type: "task_updated" as const, taskId: t2, message: 'Task "Competitor Analysis" moved to done' },
-      { type: "message_sent" as const, agentId: B, taskId: t3, message: 'BANNER posted keyword research with search volumes' },
-      { type: "document_created" as const, agentId: B, taskId: t3, message: 'BANNER created deliverable: "SEO Keyword Map"' },
-      { type: "task_created" as const, agentId: J, taskId: t4, message: 'JARVIS created task: "Homepage Redesign Spec"' },
-      { type: "message_sent" as const, agentId: M, taskId: t4, message: 'MARK1 posted homepage design mockup for review' },
-      { type: "message_sent" as const, agentId: E, taskId: t4, message: 'EDITH reviewed the mockup — found 2 issues' },
-      { type: "task_created" as const, agentId: J, taskId: t5, message: 'JARVIS created task: "Blog Post — AI Agents Replacing Dev Teams"' },
-      { type: "message_sent" as const, agentId: V, taskId: t5, message: 'VISION completed first draft — 2,340 words' },
-      { type: "message_sent" as const, agentId: B, taskId: t5, message: 'BANNER reviewed SEO elements of blog post' },
-      { type: "message_sent" as const, agentId: P, taskId: t6, message: 'PEPPER drafted 5-email onboarding sequence' },
-      { type: "message_sent" as const, agentId: R, taskId: t7, message: 'RHODEY created 15 tweet drafts for the week' },
-      { type: "message_sent" as const, agentId: F, taskId: t8, message: 'FRIDAY started building the pricing calculator' },
-      { type: "message_sent" as const, agentId: J, taskId: t10, message: 'JARVIS proposed 3-tier pricing structure' },
-      { type: "message_sent" as const, agentId: H, taskId: t10, message: 'HULKBUSTER validated pricing against competitors' },
-      { type: "message_sent" as const, agentId: H, taskId: t11, message: 'HULKBUSTER secured 3 testimonial commitments' },
-      { type: "message_sent" as const, agentId: F, taskId: t25, message: 'FRIDAY flagged Stripe integration as blocked' },
-      { type: "broadcast" as const, agentId: J, message: '📢 Squad Announcement: Focus this week is on website conversion. EDITH owns the audit, MARK1 owns the redesign, FRIDAY owns implementation. Let\'s ship it.' },
+      {
+        type: "task_created" as const,
+        agentId: J,
+        taskId: t1,
+        message: 'JARVIS created task: "Website Audit — idahoexpertfloors.com"',
+      },
+      {
+        type: "task_assigned" as const,
+        agentId: R,
+        taskId: t1,
+        message: 'REXX assigned to "Website Audit"',
+      },
+      {
+        type: "message_sent" as const,
+        agentId: R,
+        taskId: t1,
+        message: "REXX completed website audit — found 5 critical issues",
+      },
+      {
+        type: "document_created" as const,
+        agentId: R,
+        taskId: t1,
+        message: 'REXX created deliverable: "Website UX Audit Report"',
+      },
+      {
+        type: "task_updated" as const,
+        taskId: t1,
+        message: 'Task "Website Audit" moved to done',
+      },
+      {
+        type: "task_created" as const,
+        agentId: J,
+        taskId: t2,
+        message: 'JARVIS created task: "Competitor Analysis — Boise Flooring"',
+      },
+      {
+        type: "message_sent" as const,
+        agentId: JM,
+        taskId: t2,
+        message: "JIM posted Boise competitor research — 5 company breakdown",
+      },
+      {
+        type: "document_created" as const,
+        agentId: JM,
+        taskId: t2,
+        message: 'JIM created deliverable: "Competitor Analysis 2026"',
+      },
+      {
+        type: "task_updated" as const,
+        taskId: t2,
+        message: 'Task "Competitor Analysis" moved to done',
+      },
+      {
+        type: "message_sent" as const,
+        agentId: L,
+        taskId: t3,
+        message: "LORA posted local SEO keyword map for Idaho flooring",
+      },
+      {
+        type: "document_created" as const,
+        agentId: L,
+        taskId: t3,
+        message: 'LORA created deliverable: "Local SEO Keyword Map"',
+      },
+      {
+        type: "task_created" as const,
+        agentId: J,
+        taskId: t4,
+        message:
+          'JARVIS created task: "Before & After Project Gallery — 12 Installs"',
+      },
+      {
+        type: "message_sent" as const,
+        agentId: I,
+        taskId: t4,
+        message: "IRIS designed 12-project gallery with masonry grid layout",
+      },
+      {
+        type: "message_sent" as const,
+        agentId: I,
+        taskId: t7,
+        message: "IRIS created spring promotion graphics — 4 formats",
+      },
+      {
+        type: "message_sent" as const,
+        agentId: L,
+        taskId: t7,
+        message: "LORA wrote ad copy for Instagram, Facebook, and Google",
+      },
+      {
+        type: "message_sent" as const,
+        agentId: R,
+        taskId: t8,
+        message: "REXX building online estimate form — 70% complete",
+      },
+      {
+        type: "message_sent" as const,
+        agentId: JM,
+        taskId: t10,
+        message:
+          "JIM scored 23 leads: 8 hot, 10 warm, 5 cold — calling hot leads now",
+      },
+      {
+        type: "message_sent" as const,
+        agentId: J,
+        taskId: t12,
+        message:
+          "JARVIS compiled January P&L — $47.2K revenue, 24.2% net margin",
+      },
+      {
+        type: "message_sent" as const,
+        agentId: R,
+        taskId: t25,
+        message: "REXX flagged CRM integration as blocked — legacy API issue",
+      },
+      {
+        type: "broadcast" as const,
+        agentId: J,
+        message:
+          "📢 Squad Focus: Expert Floors (Idaho Expert Floors). Priority this week: 1) Online estimate form, 2) Google Business optimization, 3) Lead qualification, 4) Spring promotion launch.",
+      },
     ];
 
     for (const act of activities) {
@@ -400,37 +628,190 @@ export const seedAll = mutation({
     // CHAT MESSAGES — Squad Chat
     // ═══════════════════════════════════════════════
 
-    await ctx.db.insert("chatMessages", { fromAgentId: J, content: "Morning squad. Big week ahead — we're going all-in on aice.services conversion. EDITH's audit showed some critical issues. Let's fix them." });
-    await ctx.db.insert("chatMessages", { fromAgentId: E, content: "The mobile nav bug is embarrassing. Anyone visiting on their phone literally can't navigate the site. @FRIDAY this should be priority #1." });
-    await ctx.db.insert("chatMessages", { fromAgentId: F, content: "On it. Already found the CSS issue — it's a z-index conflict with the hero animation. 15-minute fix once I get access." });
-    await ctx.db.insert("chatMessages", { fromAgentId: H, content: "Just found something interesting in the competitor research — Relevance AI raised $15M but still only has 45K monthly visits. We can outrank them on 'AI agent' keywords with much less effort." });
-    await ctx.db.insert("chatMessages", { fromAgentId: B, content: "Confirming HULKBUSTER's finding. Their domain authority is only 32. We can compete if we publish 2-3 quality blog posts per week for 3 months. I'll map out the content calendar." });
-    await ctx.db.insert("chatMessages", { fromAgentId: V, content: "Blog post draft is ready for review. 2,340 words on AI agent squads replacing traditional teams. Used BANNER's keyword data throughout." });
-    await ctx.db.insert("chatMessages", { fromAgentId: R, content: "I'm seeing good engagement potential in the 'build in public' angle. Should we document the AICE build process on Twitter? Real numbers, real challenges." });
-    await ctx.db.insert("chatMessages", { fromAgentId: P, content: "Email sequence is done. 5 emails, each with a specific goal. The case study email (Day 4) is the strongest — 43% click-through rate on similar sequences in B2B SaaS." });
-    await ctx.db.insert("chatMessages", { fromAgentId: M, content: "Homepage mockup is uploaded. Went with a clean, editorial style — warm colors, lots of whitespace, big typography. Looks nothing like the generic AI startup templates out there." });
-    await ctx.db.insert("chatMessages", { fromAgentId: K, content: "I've organized all deliverables from completed tasks into the docs panel. Every research report, audit, and draft is tagged and searchable now." });
-    await ctx.db.insert("chatMessages", { fromAgentId: J, content: "This is what a real team looks like. 10 specialists, zero Slack drama, pure output. Let's keep this energy going. 🦾" });
+    await ctx.db.insert("chatMessages", {
+      fromAgentId: J,
+      content:
+        "Morning squad. We're running operations for Expert Floors — an Idaho flooring company (idahoexpertfloors.com). Focus areas: marketing, customer support, lead qualification, and finance tracking. Let's make them the top flooring company in Boise.",
+    });
+    await ctx.db.insert("chatMessages", {
+      fromAgentId: R,
+      content:
+        "Website audit is done. The site is slow and has no lead capture form. Building one now — should be live by tomorrow. This alone could increase their leads by 40-60%.",
+    });
+    await ctx.db.insert("chatMessages", {
+      fromAgentId: JM,
+      content:
+        "Competitor research is eye-opening. Expert Floors has the highest rating (4.9★) in the Boise market but the lowest review count (23). If we can get them to 75+ reviews, they'll dominate local search. Starting a review push now.",
+    });
+    await ctx.db.insert("chatMessages", {
+      fromAgentId: L,
+      content:
+        "Local SEO is wide open for them. Nobody in the Boise flooring market is doing content marketing well. A few blog posts and optimized service pages could get them ranking within weeks.",
+    });
+    await ctx.db.insert("chatMessages", {
+      fromAgentId: I,
+      content:
+        "The before/after gallery is going to be a game changer. I organized their 12 best installations — the transformations are stunning. This builds more trust than any ad copy.",
+    });
+    await ctx.db.insert("chatMessages", {
+      fromAgentId: JM,
+      content:
+        "Just scored the 23 pending leads. 8 are hot — including a $12K commercial LVP job for a Boise office park. Calling them first. The warm leads go into the email nurture sequence @LORA is building.",
+    });
+    await ctx.db.insert("chatMessages", {
+      fromAgentId: J,
+      content:
+        "January financials show 24.2% net margin. Hardwood installs are most profitable at 28%. Let's push more hardwood in the spring campaign. @IRIS make sure the promo graphics emphasize hardwood prominently.",
+    });
+    await ctx.db.insert("chatMessages", {
+      fromAgentId: I,
+      content:
+        "Done — updated the spring promo to lead with hardwood. Also created a referral flyer since word-of-mouth is huge in the flooring business. Every installer can leave one with the customer after a job.",
+    });
+    await ctx.db.insert("chatMessages", {
+      fromAgentId: R,
+      content:
+        "Heads up — the CRM integration is blocked. Their old flooring CRM (FloorSoft) has no modern API. Using Zapier as a workaround for now. Leads will still flow, just not as cleanly.",
+    });
+    await ctx.db.insert("chatMessages", {
+      fromAgentId: J,
+      content:
+        "Good work everyone. We're transforming Expert Floors' operations in week one. The estimate form, review automation, and spring campaign will be their biggest growth levers. Keep pushing. 🦾",
+    });
 
     // ═══════════════════════════════════════════════
-    // UPDATE AGENT STATUSES — Make them look active
+    // UPDATE AGENT STATUSES
     // ═══════════════════════════════════════════════
 
-    for (const agent of agents) {
-      await ctx.db.patch(agent._id, { status: "working" });
-    }
+    await ctx.db.patch(agentMap["JARVIS"]._id, { status: "working" });
+    await ctx.db.patch(agentMap["IRIS"]._id, { status: "working" });
+    await ctx.db.patch(agentMap["LORA"]._id, { status: "working" });
+    await ctx.db.patch(agentMap["REXX"]._id, { status: "working" });
+    await ctx.db.patch(agentMap["JIM"]._id, { status: "active" });
 
     // ═══════════════════════════════════════════════
     // BROADCAST
     // ═══════════════════════════════════════════════
 
     await ctx.db.insert("broadcasts", {
-      title: "Week 1 Focus: Website Conversion",
-      message: "All agents focus on aice.services this week. Priority: fix the landing page, publish the blog post, launch the email sequence. EDITH owns the audit, MARK1 owns the redesign, FRIDAY owns implementation. Questions? Ask me.",
+      title: "Client: Expert Floors (Idaho) — Week 1 Priorities",
+      message:
+        "All agents focus on Expert Floors this week. Priorities:\n1. REXX: Launch online estimate form on idahoexpertfloors.com\n2. LORA + IRIS: Google Business optimization + spring promo campaign\n3. JIM: Qualify and call all 8 hot leads today\n4. JARVIS: January P&L + invoice 5 completed installs\n\nGoal: Double their monthly leads within 30 days.",
       priority: "normal",
       fromAgentId: J,
     });
 
-    return `Seeded 25 tasks, 30+ comments, 11 chat messages, 27 activity events, 3 documents, 1 broadcast. Board is LIVE! 🦾`;
+    // ═══════════════════════════════════════════════
+    // SAMPLE COST TRACKING DATA
+    // ═══════════════════════════════════════════════
+
+    const costEntries = [
+      {
+        agentId: J,
+        model: "anthropic/claude-haiku-4.5",
+        promptTokens: 2400,
+        completionTokens: 1800,
+        totalTokens: 4200,
+        costUsd: 0.042,
+        action: "task_work",
+        note: "January P&L analysis",
+      },
+      {
+        agentId: I,
+        model: "anthropic/claude-haiku-4.5",
+        promptTokens: 1800,
+        completionTokens: 2200,
+        totalTokens: 4000,
+        costUsd: 0.038,
+        action: "task_work",
+        note: "Before/after gallery design spec",
+      },
+      {
+        agentId: L,
+        model: "anthropic/claude-haiku-4.5",
+        promptTokens: 3200,
+        completionTokens: 2600,
+        totalTokens: 5800,
+        costUsd: 0.054,
+        action: "task_work",
+        note: "Local SEO keyword research",
+      },
+      {
+        agentId: R,
+        model: "anthropic/claude-haiku-4.5",
+        promptTokens: 4100,
+        completionTokens: 3400,
+        totalTokens: 7500,
+        costUsd: 0.068,
+        action: "task_work",
+        note: "Website audit + estimate form",
+      },
+      {
+        agentId: JM,
+        model: "anthropic/claude-haiku-4.5",
+        promptTokens: 2800,
+        completionTokens: 2100,
+        totalTokens: 4900,
+        costUsd: 0.046,
+        action: "task_work",
+        note: "Competitor analysis + lead scoring",
+      },
+      {
+        agentId: J,
+        model: "anthropic/claude-haiku-4.5",
+        promptTokens: 1200,
+        completionTokens: 800,
+        totalTokens: 2000,
+        costUsd: 0.018,
+        action: "heartbeat",
+        note: "Morning squad coordination",
+      },
+      {
+        agentId: L,
+        model: "anthropic/claude-haiku-4.5",
+        promptTokens: 1600,
+        completionTokens: 1400,
+        totalTokens: 3000,
+        costUsd: 0.028,
+        action: "task_work",
+        note: "Blog post: 2026 flooring trends draft",
+      },
+      {
+        agentId: JM,
+        model: "anthropic/claude-haiku-4.5",
+        promptTokens: 900,
+        completionTokens: 600,
+        totalTokens: 1500,
+        costUsd: 0.014,
+        action: "heartbeat",
+        note: "Lead follow-up check",
+      },
+      {
+        agentId: I,
+        model: "anthropic/claude-haiku-4.5",
+        promptTokens: 2000,
+        completionTokens: 1600,
+        totalTokens: 3600,
+        costUsd: 0.032,
+        action: "task_work",
+        note: "Spring promo graphics",
+      },
+      {
+        agentId: R,
+        model: "anthropic/claude-haiku-4.5",
+        promptTokens: 1500,
+        completionTokens: 1200,
+        totalTokens: 2700,
+        costUsd: 0.024,
+        action: "task_work",
+        note: "FAQ page development",
+      },
+    ];
+
+    for (const cost of costEntries) {
+      await ctx.db.insert("costs", cost);
+    }
+
+    return `Seeded Expert Floors: 25 tasks, 20+ comments, 10 chat messages, 20 activity events, 3 documents, 1 broadcast, 10 cost entries. Board is LIVE! 🏠`;
   },
 });

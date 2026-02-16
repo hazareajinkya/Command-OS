@@ -21,6 +21,7 @@ import type * as seed from "../seed.js";
 import type * as seedTasks from "../seedTasks.js";
 import type * as system from "../system.js";
 import type * as tasks from "../tasks.js";
+import type * as waitlist from "../waitlist.js";
 
 import type {
   ApiFromModules,
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   seedTasks: typeof seedTasks;
   system: typeof system;
   tasks: typeof tasks;
+  waitlist: typeof waitlist;
 }>;
 
 /**

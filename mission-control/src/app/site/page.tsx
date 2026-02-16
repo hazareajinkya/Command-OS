@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 /* ═══════════════════════════════════════════════════════════
    DATA
@@ -479,6 +481,9 @@ function MotivationalSection() {
 export default function CommandOSLanding() {
   const [scrolled, setScrolled] = useState(false);
   const [email, setEmail] = useState("");
+  const [waitlistStatus, setWaitlistStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [waitlistMessage, setWaitlistMessage] = useState("");
+  const joinWaitlist = useMutation(api.waitlist.join);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [mobileMenu, setMobileMenu] = useState(false);
   const statsSection = useInView(0.3);
@@ -650,18 +655,51 @@ export default function CommandOSLanding() {
               Build your AI squad. Full control from day one.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3 max-w-sm mx-auto landing-fade-in-up landing-delay-3">
-              <input
-                type="email"
-                placeholder="your@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full sm:flex-1 bg-white/20 border border-white/30 rounded-full px-5 py-2.5 text-white placeholder-white/60 text-sm focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all backdrop-blur-sm"
-              />
-              <button className="w-full sm:w-auto bg-white text-blue-600 px-6 py-2.5 rounded-full text-sm font-bold hover:bg-blue-50 transition-all shadow-lg shadow-black/10 cursor-pointer whitespace-nowrap">
-                Join Waitlist
-              </button>
-            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!email.trim() || waitlistStatus === "loading") return;
+                setWaitlistStatus("loading");
+                setWaitlistMessage("");
+                try {
+                  const result = await joinWaitlist({ email: email.trim() });
+                  setWaitlistStatus("success");
+                  setWaitlistMessage(result.message);
+                  setEmail("");
+                } catch (err) {
+                  setWaitlistStatus("error");
+                  setWaitlistMessage(err instanceof Error ? err.message : "Something went wrong.");
+                }
+              }}
+              className="flex flex-col items-center gap-3 max-w-sm mx-auto landing-fade-in-up landing-delay-3"
+            >
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+                <input
+                  type="email"
+                  placeholder="your@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={waitlistStatus === "loading"}
+                  className="w-full sm:flex-1 bg-white/20 border border-white/30 rounded-full px-5 py-2.5 text-white placeholder-white/60 text-sm focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all backdrop-blur-sm disabled:opacity-60"
+                />
+                <button
+                type="submit"
+                disabled={waitlistStatus === "loading"}
+                className="w-full sm:w-auto bg-white/95 text-sky-600 px-8 py-3 rounded-full text-sm font-semibold tracking-wide hover:bg-sky-50 hover:shadow-xl hover:shadow-sky-200/50 hover:-translate-y-0.5 transition-all duration-200 shadow-lg shadow-sky-200/40 border border-sky-200/60 cursor-pointer whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              >
+                  {waitlistStatus === "loading" ? "Joining…" : "Join Waitlist"}
+                </button>
+              </div>
+              {waitlistMessage && (
+                <p
+                  className={`w-full text-center text-sm mt-1 ${
+                    waitlistStatus === "error" ? "text-red-200" : "text-white/90"
+                  }`}
+                >
+                  {waitlistMessage}
+                </p>
+              )}
+            </form>
           </div>
 
           {/* Rotating brand names — infinite flow */}

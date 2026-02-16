@@ -143,6 +143,12 @@ export default defineSchema({
     paused: v.boolean(), // when true: no heartbeats, no notification delivery, no OpenRouter usage
   }),
 
+  // ─── Waitlist (Landing page signups) ─────────────────────
+  waitlist: defineTable({
+    email: v.string(),
+    createdAt: v.number(),
+  }).index("by_email", ["email"]),
+
   // ─── Cost Tracking (Token & Dollar Usage) ───────────────
   costs: defineTable({
     agentId: v.id("agents"),
